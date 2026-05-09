@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stratastax — Board Game Night, Tracked</title>
+    <meta name="description" content="Track every game night with connected player profiles, session logs, and cross-game insights. Never lose a score again." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet" />
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --blue-50: #E6F1FB;
+            --blue-100: #B5D4F4;
+            --blue-200: #85B7EB;
+            --blue-400: #378ADD;
+            --blue-600: #185FA5;
+            --blue-800: #0C447C;
+            --blue-900: #042C53;
+            --purple-50: #EEEDFE;
+            --purple-100: #CECBF6;
+            --purple-200: #AFA9EC;
+            --purple-400: #7F77DD;
+            --purple-600: #534AB7;
+            --purple-800: #3C3489;
+            --purple-900: #26215C;
+            --gray-50: #F1EFE8;
+            --gray-100: #D3D1C7;
+            --gray-200: #B4B2A9;
+            --gray-400: #888780;
+            --gray-600: #5F5E5A;
+            --gray-900: #2C2C2A;
+            --bg: #fafafa;
+            --surface: #ffffff;
+            --text: #1a1a2e;
+            --text-muted: #6b6b8a;
+            --border: rgba(83, 74, 183, 0.12);
+            --radius: 12px;
+            --radius-lg: 20px;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            font-size: 16px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        a { color: inherit; text-decoration: none; }
+
+        /* NAV */
+        nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(250,250,250,0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 60px;
+        }
+
+        .nav-logo {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 800;
+            font-size: 1.25rem;
+            background: linear-gradient(135deg, var(--blue-600), var(--purple-600));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links a { font-size: 0.9rem; color: var(--text-muted); font-weight: 500; transition: color 0.2s; }
+        .nav-links a:hover { color: var(--text); }
+
+        /* HERO */
+        .hero {
+            text-align: center;
+            padding: 6rem 2rem 5rem;
+            max-width: 780px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.8); }
+        }
+
+        h1 {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 800;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+            margin-bottom: 1.25rem;
+            color: var(--text);
+        }
+
+        h1 .highlight {
+            background: linear-gradient(135deg, var(--blue-500, #4a9fd4), var(--purple-600));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* STATS BAR */
+        .stats-bar {
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: center;
+            gap: 4rem;
+            flex-wrap: wrap;
+        }
+
+        .stat-item { text-align: center; }
+        .stat-number {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 1.75rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--blue-600), var(--purple-600));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .stat-label { font-size: 0.8rem; color: var(--text-muted); font-weight: 500; margin-top: 0.1rem; }
+
+        /* SECTIONS */
+        section { padding: 5rem 2rem; }
+        .container { max-width: 1100px; margin: 0 auto; }
+
+        .section-eyebrow {
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--purple-600);
+            margin-bottom: 0.75rem;
+        }
+
+        h2 {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: clamp(1.75rem, 4vw, 2.5rem);
+            font-weight: 700;
+            line-height: 1.15;
+            letter-spacing: -0.02em;
+            margin-bottom: 1rem;
+        }
+
+        .section-header { max-width: 560px; margin-bottom: 3.5rem; }
+        .section-header p { color: var(--text-muted); font-size: 1.05rem; }
+
+        /* FEATURES */
+        .features { background: var(--bg); }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .feature-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 1.75rem;
+            transition: all 0.25s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--blue-400), var(--purple-400));
+            opacity: 0;
+            transition: opacity 0.25s;
+        }
+
+        .feature-card:hover {
+            border-color: rgba(83, 74, 183, 0.25);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 40px rgba(83, 74, 183, 0.08);
+        }
+
+        .feature-card:hover::before { opacity: 1; }
+
+        .feature-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--blue-50), var(--purple-50));
+            border: 1px solid var(--purple-100);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            margin-bottom: 1.1rem;
+        }
+
+        .feature-card h3 {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+        }
+
+        .feature-card p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.65;
+        }
+
+        .step h3 {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .step p { font-size: 0.9rem; color: var(--text-muted); }
+
+
+        .faq-chevron svg { width: 10px; height: 10px; color: var(--purple-600); transition: transform 0.25s; }
+
+        .faq-item.open .faq-chevron svg { transform: rotate(180deg); }
+
+        .faq-a p {
+            padding-bottom: 1.25rem;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.75;
+        }
+
+        .cta-section h2 { color: white; }
+        .cta-section p { color: rgba(255,255,255,0.7); font-size: 1.05rem; margin-bottom: 2.5rem; max-width: 480px; margin-left: auto; margin-right: auto; }
+
+        /* FOOTER */
+        footer {
+            background: var(--purple-800);
+            color: rgba(255,255,255,0.6);
+            text-align: center;
+            padding: 2rem;
+            font-size: 0.8rem;
+        }
+
+        footer a { color: rgba(255,255,255,0.7); }
+        footer a:hover { color: white; }
+
+    </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+    <span class="nav-logo">Stratastax</span>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+    <h1><span class="highlight">Coming Soon</span></h1>
+</div>
+
+<!-- STATS BAR -->
+<div class="stats-bar">
+    <div class="stat-item">
+        <div class="stat-number">∞</div>
+        <div class="stat-label">Players supported</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-number">100%</div>
+        <div class="stat-label">Free to use</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-number">0</div>
+        <div class="stat-label">Excuses for losing</div>
+    </div>
+</div>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+    <div class="container">
+        <div class="section-header">
+            <div class="section-eyebrow">Features</div>
+            <h2>Built around connected player data.</h2>
+            <p>Instead of isolated score sheets, Stratastax creates a living network of players, sessions, and games.</p>
+        </div>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🔗</div>
+                <h3>Connected Player Profiles</h3>
+                <p>Players, games, sessions, and statistics are all linked automatically — no manual wiring required.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">👤</div>
+                <h3>Claim Existing Players</h3>
+                <p>Friends can create an account later and inherit all historical statistics, so no data is ever lost.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🎲</div>
+                <h3>Track Every Session</h3>
+                <p>Log scores, placements, notes, and participating players for every game night in seconds.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Cross-Game Insights</h3>
+                <p>See long-term trends, win rates, favorite games, and recurring player groups across all your sessions.</p>
+            </div>
+        </div>
+    </div>
+</section>
+</body>
+</html>

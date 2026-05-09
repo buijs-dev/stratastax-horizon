@@ -6,17 +6,13 @@ The meeting point of Earth and Sky.
 > Where the architecture of Stratastax meets the world—the horizon where our technology and its users first connect.
 
 ## Overview
-Stratastax Horizon is the public face of the Stratastax ecosystem. Built on the edge with Astro and Cloudflare Pages, it serves as the atmospheric entry point for our users, offering a high-performance, content-rich experience through MDX.
+Stratastax Horizon is the public face of the Stratastax ecosystem. 
+Built on the edge with plain HTML and CSS, 
+hosted on Cloudflare Pages, 
+it serves as the atmospheric entry point for our users, 
+offering a high-performance, content-rich experience.
 
 While the engine powers the logic and the portal facilitates the work, Horizon provides the vision.
-
-## Tech Stack
-- Framework: Astro (Static Site Generation)
-- Content: MDX (Component-driven documentation and landing sections)
-- Deployment: Cloudflare Pages (Global edge delivery)
-
-## Styling:
-
 
 ## Relationship to Ecosystem
 - stratastax-engine: The core service providing the data. 
