@@ -1,0 +1,476 @@
+---
+title: Kotlin Guidelines
+description: Idiomatic Kotlin rules for StrataStax focusing on rich domain modeling, functional thinking, and pragmatic OOP.
+sidebar:
+    label: Kotlin
+    order: 4
+---
+
+> Kotlin is used to model the domain as clearly, safely, and expressively as possible.
+
+We combine **functional programming for behavior** with **object-oriented programming for domain modeling**.
+
+The goal is not idiomatic Kotlin for its own sake, but a codebase that is easy to reason about, safe by design, and aligned with the business language.
+
+---
+
+# 1. Core Kotlin Philosophy
+
+## 1.1 Model the Domain, Not the Data
+
+Code should reflect business concepts, not technical representations.
+
+Prefer domain types over primitives:
+
+```kotlin
+@JvmInline
+value class CustomerId(val value: UUID)
+
+@JvmInline
+value class EmailAddress(val value: String)
+```
+
+Avoid:
+
+```kotlin
+fun sendEmail(customerId: UUID, email: String)
+```
+
+Prefer:
+
+```kotlin
+fun sendEmail(customerId: CustomerId, email: EmailAddress)
+```
+
+---
+
+## 1.2 Behaviour Belongs to the Model
+
+Objects should own their behavior.
+
+Avoid utility classes that manipulate passive data.
+
+Good:
+
+```kotlin
+data class Money(
+    val amount: BigDecimal,
+    val currency: Currency
+) {
+
+    operator fun plus(other: Money): Money {
+        require(currency == other.currency)
+        return copy(amount = amount + other.amount)
+    }
+}
+```
+
+Bad:
+
+```kotlin
+object MoneyUtils {
+    fun add(a: Money, b: Money): Money = ...
+}
+```
+
+---
+
+## 1.3 Make Illegal States Impossible
+
+Invalid objects should not exist.
+
+Use constructors and factories to enforce invariants.
+
+```kotlin
+@JvmInline
+value class Percentage private constructor(val value: Int) {
+
+    companion object {
+        fun of(value: Int): Percentage {
+            require(value in 0..100)
+            return Percentage(value)
+        }
+    }
+}
+```
+
+---
+
+## 1.4 Prefer Immutability
+
+- Always prefer `val`
+- Avoid shared mutable state
+- Treat mutation as an edge concern
+
+```kotlin
+val users: List<User> = emptyList()
+```
+
+Not:
+
+```kotlin
+var users = mutableListOf<User>()
+```
+
+---
+
+# 2. Domain Modeling
+
+## 2.1 Rich Domain Models
+
+Domain objects are not data holders. They contain behavior and invariants.
+
+```kotlin
+data class Order(
+    val id: OrderId,
+    val items: List<OrderItem>,
+    val status: OrderStatus
+) {
+
+    fun ship(): Order {
+        require(status == OrderStatus.PAID)
+        return copy(status = OrderStatus.SHIPPED)
+    }
+}
+```
+
+Avoid anemic models with external services manipulating state.
+
+---
+
+## 2.2 Sealed Hierarchies over Enums
+
+Use sealed types for domain states with behavior or structure.
+
+Good:
+
+```kotlin
+sealed interface PaymentMethod
+
+data class Ideal(val issuer: String) : PaymentMethod
+data class CreditCard(val lastFourDigits: String) : PaymentMethod
+data object Cash : PaymentMethod
+```
+
+Bad:
+
+```kotlin
+enum class PaymentType { IDEAL, CREDIT_CARD, CASH }
+
+data class Payment(
+    val type: PaymentType,
+    val issuer: String?
+)
+```
+
+Sealed types enforce completeness at compile time.
+
+---
+
+## 2.3 Value Classes
+
+Use value classes for domain primitives.
+
+- Improves type safety
+- Prevents primitive obsession
+- Makes intent explicit
+
+```kotlin
+@JvmInline
+value class OrderId(val value: UUID)
+```
+
+---
+
+## 2.4 Factories and Constructors
+
+Use primary constructors for simple invariants.
+
+Use factories when construction is complex.
+
+```kotlin
+class EmailAddress private constructor(val value: String) {
+
+    companion object {
+        fun of(value: String): EmailAddress {
+            require(value.contains("@"))
+            return EmailAddress(value)
+        }
+    }
+}
+```
+
+---
+
+# 3. Functional Programming in Kotlin
+
+## 3.1 Prefer Pure Functions
+
+Functions should:
+
+- be deterministic
+- have no side effects
+- return values
+
+```kotlin
+fun calculateTotal(items: List<Money>): Money =
+    items.reduce(Money::plus)
+```
+
+---
+
+## 3.2 Prefer Expressions
+
+```kotlin
+val result = when (status) {
+    OrderStatus.PAID -> "Paid"
+    OrderStatus.PENDING -> "Pending"
+}
+```
+
+Avoid statement-heavy logic.
+
+---
+
+## 3.3 Collections
+
+Prefer functional operations:
+
+- map
+- filter
+- fold
+- associate
+
+Avoid imperative loops when readability improves.
+
+---
+
+## 3.4 Side Effects at the Edges
+
+Side effects belong in infrastructure or application boundaries:
+
+- database calls
+- HTTP calls
+- messaging
+- logging
+
+Core domain remains pure.
+
+---
+
+# 4. Object-Oriented Design
+
+## 4.1 Prefer Composition
+
+Avoid inheritance unless modelling a true type hierarchy.
+
+---
+
+## 4.2 Avoid Utility Classes
+
+Utility classes often indicate missing domain modeling.
+
+Bad:
+
+```kotlin
+object OrderUtils
+object ValidationUtils
+```
+
+Prefer domain methods instead.
+
+---
+
+## 4.3 Extension Functions (Carefully)
+
+Use for readability, not business logic orchestration.
+
+Good:
+
+```kotlin
+fun String.toEmail(): EmailAddress
+```
+
+Bad:
+
+```kotlin
+fun List<Order>.processAllOrdersAndSendEmails()
+```
+
+---
+
+# 5. Null Safety
+
+- Avoid nullable types where possible
+- Prefer sealed types over nullable ambiguity
+- Never use `!!`
+
+Bad:
+
+```kotlin
+val email: String?
+```
+
+Better:
+
+```kotlin
+EmailAddress
+```
+
+---
+
+# 6. Error Handling Model
+
+This is a core architectural decision.
+
+## 6.1 Two Categories of Failures
+
+### 1. Invalid State (Exception)
+
+If something should never exist → exception.
+
+Examples:
+
+- invalid constructor input
+- broken invariants
+- illegal domain transitions
+
+```kotlin
+class InvalidOrderStateException(message: String) : RuntimeException(message)
+```
+
+---
+
+### 2. Expected Outcome (Result Model)
+
+If something can happen in normal flow → model it explicitly.
+
+```kotlin
+sealed interface FindCustomerResult {
+    data class Found(val customer: Customer) : FindCustomerResult
+    data object NotFound : FindCustomerResult
+}
+```
+
+---
+
+### 3. Infrastructure Failure (Exception)
+
+- database down
+- network timeout
+- serialization failure
+
+These are exceptions.
+
+---
+
+## 6.2 Rule Matrix
+
+| Situation | Approach |
+|----------|---------|
+| Invalid object state | Exception |
+| Constructor validation failure | Exception |
+| Expected business outcome | Result / sealed type |
+| Missing data in query | Result / nullable |
+| Infrastructure failure | Exception |
+| Programming error | Exception |
+
+---
+
+## 6.3 Custom Exceptions
+
+Use domain-level exceptions sparingly.
+
+Prefer:
+
+```kotlin
+sealed class DomainException(message: String) : RuntimeException(message)
+```
+
+Avoid excessive granularity.
+
+---
+
+## 6.4 Core Principle
+
+> Exceptions protect invariants. Results model business outcomes.
+
+---
+
+# 7. Collections & Control Flow
+
+Prefer:
+
+```kotlin
+orders.filter { it.isPaid }
+```
+
+over:
+
+```kotlin
+for (order in orders) {
+    ...
+}
+```
+
+Use loops only when necessary for clarity or performance.
+
+---
+
+# 8. Consistency Rules
+
+- Prefer `val` over `var`
+- Prefer data classes for immutable models
+- Prefer sealed types over enums for domain modeling
+- Prefer composition over inheritance
+- Prefer explicit over implicit behavior
+
+---
+
+# 9. Anti-Patterns
+
+Avoid:
+
+- Anemic domain models
+- Utility classes for business logic
+- Primitive obsession
+- Overuse of nullable types
+- Hidden side effects
+- `!!` operator
+- Service classes that only delegate
+- Enums with business logic branching everywhere
+
+---
+
+# 10. AI Agent Instructions
+
+When generating Kotlin code:
+
+- Model the domain explicitly
+- Use value classes for primitives
+- Prefer sealed hierarchies over enums
+- Place behavior inside domain objects
+- Avoid utility classes
+- Avoid ServiceImpl patterns
+- Keep code immutable by default
+- Use Result/sealed types for expected outcomes
+- Use exceptions for invariant violations
+- Follow feature-first structure
+- Keep side effects at boundaries
+
+---
+
+# Summary
+
+Kotlin in StrataStax is used to:
+
+- Model the business domain precisely
+- Prevent invalid states by design
+- Combine FP clarity with OO expressiveness
+- Keep logic close to the data it belongs to
+- Ensure correctness through the type system
+
+The goal is not minimal code or maximal abstraction.
+
+The goal is **safe, expressive, and maintainable domain-driven software**.
+```

@@ -1,0 +1,89 @@
+---
+title: Attach Photos
+description: Add photos to a match record to preserve the moment alongside the data.
+sidebar:
+    label: Attach Photos
+    order: 3
+---
+
+import UserJourney from '../_components/UserJourney.vue'
+import DomainImpact from '../_components/DomainImpact.vue'
+
+## Goal
+Add photos to a match record to preserve the moment alongside the
+data — turning a score entry into a living memory.
+
+## Why
+A match is a social event. Photos capture what data cannot:
+the table setup, the people, the moment someone won. Attached to a
+match record, they become part of a player's Personal Gaming Archive — searchable,
+tied to a specific game and group, and visible to the participants who were there.
+
+## Journey
+
+<UserJourney
+    client:load
+    steps={[
+        {
+            label: 'You open a match record',
+            actor: 'You'
+        },
+        {
+            label: 'You open the photos section',
+            actor: 'You'
+        },
+        {
+            label: 'You upload one or more photos',
+            actor: 'You',
+            note: 'Photos can be taken directly or selected from your device.'
+        },
+        {
+            label: 'You optionally add a caption to each photo',
+            actor: 'You'
+        },
+        {
+            label: 'Photos are attached to the match record',
+            actor: 'System',
+            note: 'Photos are visible to all participants in the match, subject to their own privacy levels.',
+            status: 'success'
+        }
+    ]}
+/>
+
+## Outcome
+- Photos are stored and linked to the match record.
+- All participants in the match can view the photos, subject to Privacy Levels.
+- Photos appear in your Personal Gaming Archive alongside the match data.
+
+---
+
+## Metadata
+
+| Field             | Value                                                                                                                                                                                                                                  |
+|-------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Capability        | Match Recording                                                                                                                                                                                                                        |
+| Primary actor     | User                                                                                                                                                                                                                                   |
+| Supporting actors | System                                                                                                                                                                                                                                 |
+| Related concepts  | [Match Media](/design/01_introduction/concepts#match-media), [Personal Gaming Archive](/design/01_introduction/concepts#personal-gaming-archive), [Data Ownership & Privacy](/design/01_introduction/concepts#data-ownership--privacy) |
+
+---
+
+## Conceptual impact
+
+<DomainImpact
+    client:load
+    groups={[
+        {
+            action: 'Creates',
+            entities: ['Match Photo']
+        },
+        {
+            action: 'Updates',
+            entities: ['Match']
+        },
+        {
+            action: 'Reads',
+            entities: ['Match']
+        }
+    ]}
+/>

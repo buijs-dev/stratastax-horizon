@@ -1,0 +1,97 @@
+---
+title: Record Playset
+description: Create a reusable configuration of expansions, variants, and scenario for use in one or more matches.
+sidebar:
+    label: Record Playset
+    order: 2
+---
+
+import UserJourney from '../_components/UserJourney.vue'
+import DomainImpact from '../_components/DomainImpact.vue'
+
+## Goal
+Capture the exact expansions, variants, and scenario used for a match as a reusable
+Playset, so the shared context of a match is fully reconstructable and does not need
+to be configured again next time.
+
+## Why
+Raw scores tell you who won. Configuration data tells you why.
+The same game played with different expansions, variants, or scenarios produces
+a fundamentally different strategic context. Capturing that context turns a match
+record into the basis for real insight — expansion impact, variant balance, scenario
+difficulty — across hundreds of matches. Groups that play the same configuration
+repeatedly only need to define it once and can reuse it every time.
+
+## Journey
+
+<UserJourney
+    client:load
+    steps={[
+        {
+            label: 'You start a new Playset',
+            actor: 'You'
+        },
+        {
+            label: 'You select which expansions are included',
+            actor: 'You'
+        },
+        {
+            label: 'You configure active variants and custom rules',
+            actor: 'You'
+        },
+        {
+            label: 'You set the scenario or map (if applicable)',
+            actor: 'You'
+        },
+        {
+            label: 'You save the Playset',
+            actor: 'You'
+        },
+        {
+            label: 'The Playset becomes available for use in matches',
+            actor: 'System',
+            note: 'The Playset exists independently of any single match and can be linked to this match and reused in future matches with the same configuration.',
+            status: 'success'
+        }
+    ]}
+/>
+
+## Outcome
+- A reusable Playset now exists: expansions, variants, custom rules, and scenario.
+- The Playset can be linked to this match and to any future match with the same configuration.
+- Expansion and variant statistics become available for analysis.
+- Matches linked to this Playset are reconstructable in full detail.
+- Configuration data contributes to anonymous, aggregated community insights.
+
+---
+
+## Metadata
+
+| Field             | Value                                                                                                                                                                                                     |
+|-------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Capability        | Match Recording                                                                                                                                                                                           |
+| Primary actor     | User                                                                                                                                                                                                      |
+| Supporting actors | System                                                                                                                                                                                                    |
+| Related concepts  | [Rich Game Data](/design/01_introduction/concepts#rich-game-data), [Playsets](/design/01_introduction/concepts#playsets), [Anonymous Aggregation](/design/01_introduction/concepts#anonymous-aggregation) |
+
+---
+
+## Conceptual impact
+
+<DomainImpact
+    client:load
+    groups={[
+        {
+            action: 'Creates',
+            entities: ['Playset']
+        },
+        {
+            action: 'Updates',
+            entities: ['Match']
+        },
+        {
+            action: 'Reads',
+            entities: ['Game', 'Expansion']
+        }
+    ]}
+/>

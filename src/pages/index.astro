@@ -1,0 +1,50 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import Hero from '../components/Hero.vue';
+import StatsBar from '../components/StatsBar.vue';
+import Features from '../components/Features.vue';
+import CTA from '../components/CTA.vue';
+
+const features = [
+    {
+        icon: '🔗',
+        title: 'Connected Player Profiles',
+        description: 'Players, games, sessions, and statistics are all linked automatically — no manual wiring required.',
+    },
+    {
+        icon: '👤',
+        title: 'Claim Existing Players',
+        description: 'Friends can create an account later and inherit all historical statistics, so no data is ever lost.',
+    },
+    {
+        icon: '🎲',
+        title: 'Track Every Session',
+        description: 'Log scores, placements, notes, and participating players for every game night in seconds.',
+    },
+    {
+        icon: '📊',
+        title: 'Cross-Game Insights',
+        description: 'See long-term trends, win rates, favourite games, and recurring player groups across all your sessions.',
+    },
+];
+
+const stats = [
+    {value: '∞', label: 'Players supported'},
+    {value: '100%', label: 'Free to use'},
+    {value: '0', label: 'Excuses for losing'},
+];
+---
+
+<StarlightPage
+        frontmatter={{
+            title: 'Stratastax — Board Game Night, Tracked',
+            description: 'Track every game night with connected player profiles, session logs, and cross-game insights. Never lose a score again.',
+            template: 'splash',
+            // splash template removes the sidebar, giving us full-width canvas
+        }}
+>
+    <Hero/>
+    <StatsBar stats={stats}/>
+    <Features features={features}/>
+    <CTA/>
+</StarlightPage>

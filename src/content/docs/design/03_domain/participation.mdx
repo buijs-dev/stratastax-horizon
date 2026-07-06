@@ -1,0 +1,124 @@
+---
+title: Participation
+description: One player's role and result within a specific match.
+sidebar:
+    label: Participation
+    order: 4
+---
+
+## Purpose
+
+A Participation represents one player's involvement in one specific Match:
+who played (via a GhostPlayer reference), what they brought to the game
+(their Loadout, if applicable), and what happened to them (their result).
+
+A Participation is the only thing a Match ever references to represent a
+player — never a GhostPlayer or CanonicalPlayer directly.
+
+---
+
+## Dispute Flag
+
+A claimed Participation's CanonicalPlayer owner may mark it as **Disputed**,
+with a reason. This is a visible annotation only — it does not block, alter,
+or revert anything about the Match, and it does not trigger any resolution
+process. It exists so a participant can register disagreement with a result
+without needing anyone else's permission, in place of a formal dispute
+mechanism.
+
+A Dispute Flag can only be set by the User who owns the CanonicalPlayer
+claiming that Participation's GhostPlayer — no one else can flag, or clear,
+someone else's disagreement. The flag can be cleared by the same User at
+any time.
+
+---
+
+## Responsibilities
+
+A Participation is responsible for:
+
+- referencing exactly one GhostPlayer;
+- holding the player's result within the Match (score, rank, outcome);
+- holding the player's Loadout, where the game defines one;
+- allowing its claiming CanonicalPlayer's owner to set or clear a Dispute
+Flag;
+- remaining a stable, immutable historical record.
+
+---
+
+## Not Responsible For
+
+A Participation is NOT responsible for:
+
+- resolving or claiming identity — that belongs to ClaimRequest and
+ClaimEdge;
+- holding configuration shared across all participants (expansions,
+variants, scenario) — that belongs to Playset, on the Match;
+- computing statistics — Participations are read by statistics computation,
+not responsible for it;
+- knowing whether its GhostPlayer has been claimed.
+
+---
+
+## Invariants
+
+- A Participation references exactly one GhostPlayer.
+- A Participation belongs to exactly one Match.
+- A Match has at most one Participation per GhostPlayer.
+- A Participation's result (score, rank, outcome) does not change except
+through an approved MatchEdit (see **MatchEdit**). It is never silently
+overwritten, and any prior value remains part of the audit trail.
+- A Participation's Loadout, if present, follows the same rule.
+- A Locked Match's Participations can no longer be the target of any
+MatchEdit, and are immutable in the strict sense from that point on.
+- A Participation is unaffected by later changes to its GhostPlayer's
+display name, or by any ClaimEdge created or removed afterward.
+- A Dispute Flag can only be set or cleared by the User owning the
+CanonicalPlayer that claims the Participation's GhostPlayer; an unclaimed
+Participation cannot carry a Dispute Flag.
+- Setting or clearing a Dispute Flag never changes the Participation's
+result, Loadout, or any other data.
+
+---
+
+## Lifecycle
+
+### Creation
+
+A Participation is created when a Match is recorded, once for each
+participant, alongside the Match itself.
+
+### Evolution
+
+A Participation's result or Loadout changes only through an approved
+MatchEdit (see **MatchEdit**). Outside of an approved MatchEdit, nothing
+about a Participation changes after creation.
+
+### End State
+
+A Participation is never deleted while its Match exists.
+
+---
+
+## Relationships
+
+- Participation is referenced by Match;
+- Participation references GhostPlayer;
+- Participation holds Loadout.
+
+---
+
+## Domain Events
+
+- ParticipationCreated
+- ParticipationDisputed
+- ParticipationDisputeCleared
+
+---
+
+## Aggregate Design
+
+Participation is not its own Aggregate Root. It is a child entity within the
+**Match** aggregate: Match enforces the consistency rules that involve all
+of its Participations together (e.g. exactly one Participation per
+GhostPlayer, a complete and coherent set of results).

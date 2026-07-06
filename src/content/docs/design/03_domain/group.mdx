@@ -1,0 +1,124 @@
+---
+title: Group
+description: A named, reusable roster of Users, used to grant Privileged Access to specific data.
+sidebar:
+    label: Group
+    order: 14
+---
+
+## Purpose
+
+A Group is a named collection of Users, managed by its owner, whose only
+purpose is to be referenced by that owner's PrivacySettings — determining
+who gets Privileged Access to the data types the owner chooses to share with
+it. A Group has no meaning beyond being a roster: it does not itself grant
+or restrict anything.
+
+---
+
+## Responsibilities
+
+A Group is responsible for:
+
+- having a Name;
+- being owned by exactly one User;
+- holding zero or more member Users, added or removed by its owner;
+- being available for its owner's PrivacySettings to reference.
+
+---
+
+## Not Responsible For
+
+A Group is NOT responsible for:
+
+- deciding what data is visible to its members — that belongs entirely to
+PrivacySetting; a Group by itself grants nothing;
+- requiring consent from a User before they are added as a member — for
+this model, being added to someone else's Group is unilateral, the same
+way keeping someone in a personal address book requires no approval from
+them;
+- any approval workflow around membership — that does not exist for a
+Group as modeled here (contrast with Membership Requests, used
+elsewhere for Communities — see **Open Question**).
+
+---
+
+## Invariants
+
+- A Group is owned by exactly one User, fixed at creation. Ownership is
+never transferred.
+- A Group's members are added or removed only by its owner.
+- A PrivacySetting may only reference Groups owned by the same User as the
+PrivacySetting itself — you can only grant access via your own Groups,
+never someone else's (this resolves the open question left in
+**PrivacySetting**).
+- Removing a member from a Group takes effect immediately for every
+PrivacySetting referencing it; there is no grace period.
+- Deleting a Group removes it from every PrivacySetting that referenced it;
+a Group is not "historical data" like a Match, so its deletion is not
+blocked by being in use.
+
+---
+
+## Lifecycle
+
+### Creation
+
+A Group is created directly by its owner, with a Name and, optionally, an
+initial set of members.
+
+### Evolution
+
+The owner may rename the Group, and add or remove members, at any time.
+
+### End State
+
+A Group is deleted by its owner at any time. Any PrivacySetting that
+referenced it simply loses that grant.
+
+---
+
+## Relationships
+
+- Group is owned by exactly one User;
+- Group has zero or more member Users;
+- Group is referenced by zero or more PrivacySettings (all owned by the
+same User as the Group).
+
+---
+
+## Domain Events
+
+- GroupMemberAdded
+- GroupMemberRemoved
+- GroupDeleted
+
+Creation and renaming are not modeled as events — nothing needs to react to
+a Group merely existing or being renamed, the same reasoning applied to
+Game. Membership changes and deletion are included because they directly
+change who can see what, which downstream access checks (and potentially
+caches) legitimately need to react to.
+
+---
+
+## Aggregate Design
+
+Group is its own Aggregate Root, not a child entity of User — deliberately,
+even though every Group currently has a single owning User. The reason is
+forward-looking: Group will very likely be reused by Community (see
+**Open Question**), and keeping it independent avoids constraining that
+design to User's aggregate boundary before Community itself is worked out.
+
+---
+
+## Resolved: Group and Community
+
+Conceptually, "every Community has a Group at its core." Rather than
+changing Group to support multiple owners or an approval-based membership
+flow, Community (see **Community**) resolves this without touching Group at
+all: a Community stores its own Memberships directly (via
+**MembershipRequest**, its own approval-based mechanism), and separately,
+optionally references an ordinary, single-owner Group as its **AdminGroup**
+— reusing Group purely to delegate admin rights, not to store membership.
+Group's shape and invariants above are unaffected by Community's
+existence.

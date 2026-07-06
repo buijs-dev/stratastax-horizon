@@ -1,0 +1,75 @@
+---
+title: Leave Community
+description: Voluntarily leave a Community you are a member of.
+sidebar:
+label: Leave Community
+order: 20
+---
+
+import UserJourney from '../_components/UserJourney.vue'
+import DomainImpact from '../_components/DomainImpact.vue'
+
+## Goal
+Leave a Community you no longer want to be part of, without affecting
+matches you have already recorded within it.
+
+## Why
+Membership is never permanent. A player should be able to step back from a
+Community at any time, without losing their own gaming history or
+retroactively changing what already happened within that Community.
+
+## Journey
+
+<UserJourney
+    client:load
+    steps={[
+        {
+            label: 'You open a Community you are a member of',
+            actor: 'You'
+        },
+        {
+            label: 'You choose to leave',
+            actor: 'You',
+            note: 'The Community\'s owner cannot leave — they must transfer ownership first.'
+        },
+        {
+            label: 'Your membership ends',
+            actor: 'System',
+            note: 'If you held admin rights, they end at the same time. Matches you already recorded remain part of the Community\'s shared history.',
+            status: 'success'
+        }
+    ]}
+/>
+
+## Outcome
+- You are no longer a member of the Community.
+- Any admin rights you held end at the same time.
+- Matches already recorded within the Community remain unchanged, for
+everyone.
+- You may request to join again later, subject to the Community's
+JoinPolicy.
+
+---
+
+## Metadata
+
+| Field             | Value                                                                                                                            |
+|-------------------|-----------------------------------------------------------------------------------------------------------------------------------|
+| Capability        | Communities                                                                                                                       |
+| Primary actor     | User                                                                                                                              |
+| Supporting actors | System                                                                                                                            |
+| Related concepts  | [Communities](/design/01_introduction/concepts#communities), [Groups](/design/01_introduction/concepts#groups)                  |
+
+---
+
+## Conceptual impact
+
+<DomainImpact
+    client:load
+    groups={[
+        {
+            action: 'Deletes',
+            entities: ['Membership']
+        }
+    ]}
+/>

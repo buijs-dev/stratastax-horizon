@@ -1,0 +1,151 @@
+/* ─── Fonts ──────────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
+
+/* ─── Design Tokens ──────────────────────────────────────────────────── */
+:root {
+  /* Default to Dark Mode */
+  --color-bg: #0F1117;
+  --color-surface: #1C2030;
+  --color-surface-high: #252840;
+  --color-primary: #4E7CFF;
+  --color-primary-dim: #2A4ECC;
+  --color-accent: #8B5CF6;
+  --color-accent-dim: #6D3FD4;
+  --color-text: #E2E8F0;
+  --color-muted: #64748B;
+  --color-border: rgba(78, 124, 255, 0.15);
+
+  --font-display: "Plus Jakarta Sans", sans-serif;
+  --font-body: Inter, sans-serif;
+
+  --radius-card: 16px;
+  --radius-pill: 999px;
+
+  --gradient-brand: linear-gradient(135deg, #4E7CFF, #8B5CF6);
+  --gradient-brand-h: linear-gradient(90deg, #4E7CFF, #8B5CF6);
+}
+
+[data-theme='light'] {
+  --color-bg: #FFFFFF;
+  --color-surface: #F8FAFC;
+  --color-surface-high: #F1F5F9;
+  --color-primary: #3B82F6;
+  --color-primary-dim: #2563EB;
+  --color-accent: #7C3AED;
+  --color-accent-dim: #6D28D9;
+  --color-text: #0F172A;
+  --color-muted: #64748B;
+  --color-border: rgba(59, 130, 246, 0.12);
+}
+
+/* ─── Starlight dark theme overrides ────────────────────────────────── */
+:root,
+[data-theme='dark'] {
+    --sl-color-bg:              #0F1117;
+    --sl-color-bg-nav:          #0F1117;
+    --sl-color-bg-sidebar:      #131620;
+    --sl-color-hairline:        rgba(78, 124, 255, 0.12);
+    --sl-color-hairline-light:  rgba(78, 124, 255, 0.08);
+    --sl-color-text:            #E2E8F0;
+    --sl-color-text-accent:     #4E7CFF;
+    --sl-color-accent:          #4E7CFF;
+    --sl-color-accent-high:     #8B5CF6;
+    --sl-color-white:           #E2E8F0;
+    --sl-color-gray-1:          #E2E8F0;
+    --sl-color-gray-2:          #94A3B8;
+    --sl-color-gray-3:          #475569;
+    --sl-color-gray-4:          #2D3748;
+    --sl-color-gray-5:          #1C2030;
+    --sl-color-gray-6:          #131620;
+    --sl-color-black:           #0F1117;
+    --sl-font:                  'Inter', sans-serif;
+    --sl-font-system:           'Inter', sans-serif;
+}
+
+/* ─── Starlight light theme overrides ────────────────────────────────── */
+[data-theme='light'] {
+    --sl-color-bg:              #FFFFFF;
+    --sl-color-bg-nav:          #FFFFFF;
+    --sl-color-bg-sidebar:      #F8FAFC;
+    --sl-color-hairline:        rgba(59, 130, 246, 0.12);
+    --sl-color-hairline-light:  rgba(59, 130, 246, 0.08);
+    --sl-color-text:            #0F172A;
+    --sl-color-text-accent:     #3B82F6;
+    --sl-color-accent:          #3B82F6;
+    --sl-color-accent-high:     #7C3AED;
+    --sl-color-white:           #0F172A;
+    --sl-color-gray-1:          #1E293B;
+    --sl-color-gray-2:          #475569;
+    --sl-color-gray-3:          #64748B;
+    --sl-color-gray-4:          #94A3B8;
+    --sl-color-gray-5:          #E2E8F0;
+    --sl-color-gray-6:          #F1F5F9;
+    --sl-color-black:           #FFFFFF;
+}
+
+/* ─── Global base ────────────────────────────────────────────────────── */
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ─── Gradient text utility ──────────────────────────────────────────── */
+.text-gradient {
+    background: linear-gradient(135deg, #4E7CFF, #8B5CF6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* ─── Hero mesh gradient (signature element) ─────────────────────────── */
+.hero-mesh {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.hero-mesh::before,
+.hero-mesh::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    animation: drift 12s ease-in-out infinite alternate;
+}
+
+.hero-mesh::before {
+    width: 600px;
+    height: 600px;
+    top: -200px;
+    left: -100px;
+    background: radial-gradient(circle, rgba(78, 124, 255, 0.18) 0%, transparent 70%);
+}
+
+.hero-mesh::after {
+    width: 500px;
+    height: 500px;
+    top: -100px;
+    right: -100px;
+    background: radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, transparent 70%);
+    animation-delay: -6s;
+}
+
+@keyframes drift {
+    from { transform: translate(0, 0) scale(1); }
+    to   { transform: translate(40px, 30px) scale(1.08); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hero-mesh::before,
+    .hero-mesh::after { animation: none; }
+}
+
+/* ─── Starlight nav logo ─────────────────────────────────────────────── */
+.site-title {
+    font-family: 'Plus Jakarta Sans', sans-serif !important;
+    font-weight: 800 !important;
+}

@@ -1,0 +1,87 @@
+---
+title: Share Statistics
+description: Share a Statistic Snapshot with a Group, publicly, or directly with someone.
+sidebar:
+    label: Share Statistics
+    order: 10
+---
+
+import UserJourney from '../_components/UserJourney.vue'
+import DomainImpact from '../_components/DomainImpact.vue'
+
+## Goal
+Share a Statistic Snapshot with a chosen audience — setting who can see it,
+and actively drawing their attention to it.
+
+## Why
+Visibility and attention are not the same thing. A Snapshot's Privacy Level
+determines who is allowed to see it, but a player may also want to actively
+share it — for example by sending a link or a notification — so the intended
+audience actually notices it, rather than relying on them to find it
+themselves. Sharing complements Privacy Levels; it does not replace them.
+
+## Journey
+
+<UserJourney
+    client:load
+    steps={[
+        {
+            label: 'You select a Statistic Snapshot from your archive',
+            actor: 'You'
+        },
+        {
+            label: 'You set the Snapshot\'s Privacy Level',
+            actor: 'You',
+            note: 'Share with a specific Group (Friends, Gaming Club) or make the Snapshot public.'
+        },
+        {
+            label: 'You actively share the Snapshot',
+            actor: 'You',
+            note: 'For example through a shareable link or a notification to specific people.'
+        },
+        {
+            label: 'The intended audience can access the Snapshot',
+            actor: 'System',
+            note: 'Access is governed by the Snapshot\'s Privacy Level. Other Snapshots and underlying match records remain unaffected.',
+            status: 'success'
+        }
+    ]}
+/>
+
+## Outcome
+- The Snapshot's Privacy Level determines who is allowed to see it.
+- The Snapshot has been actively shared with the chosen audience.
+- Other Snapshots and the underlying match records remain at their original visibility.
+
+---
+
+## Metadata
+
+| Field             | Value                                                                                                                                                                                    |
+|-------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Capability        | Statistics                                                                                                                                                                                |
+| Primary actor     | User                                                                                                                                                                                       |
+| Supporting actors | System                                                                                                                                                                                     |
+| Related concepts  | [Statistic Snapshots](/design/01_introduction/concepts#statistic-snapshots), [Data Ownership & Privacy](/design/01_introduction/concepts#data-ownership--privacy)                        |
+
+---
+
+## Conceptual impact
+
+<DomainImpact
+    client:load
+    groups={[
+        {
+            action: 'Updates',
+            entities: ['Statistic Snapshot']
+        },
+        {
+            action: 'Creates',
+            entities: ['Share']
+        },
+        {
+            action: 'Reads',
+            entities: ['Group']
+        }
+    ]}
+/>

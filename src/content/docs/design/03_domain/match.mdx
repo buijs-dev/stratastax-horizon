@@ -1,0 +1,128 @@
+---
+title: Match
+description: The aggregate root recording that a group of players played a specific game together.
+sidebar:
+    label: Match
+    order: 10
+---
+
+## Purpose
+
+A Match records that a specific Game was played, by whom, under what shared
+configuration, and with what result for each participant. It is the anchor
+of gaming history: everything else in this domain — identity resolution
+and statistics — ultimately traces back to Matches.
+
+A Match owns its MatchParticipants and optionally references a reusable
+Playset. It never references a
+GhostPlayer or CanonicalPlayer directly — only through a MatchParticipant (see
+**MatchParticipant**).
+
+---
+
+## Responsibilities
+
+A Match is responsible for:
+
+- referencing exactly one Game;
+- referencing at most one Playset, shared across all its MatchParticipants;
+- optionally referencing which Community, if any, it was played within.
+- owning one or more MatchParticipants, one per player;
+- enforcing that no GhostPlayer appears in more than one MatchParticipant
+within the same Match;
+- recording its owner — the User who recorded it (the recorder);
+- exposing whether it is Locked;
+- exposing and enforcing its Edit Requests Toggle.
+
+---
+
+## Not Responsible For
+
+A Match is NOT responsible for:
+
+- identity resolution or claiming — that belongs to ClaimRequest and
+ClaimEdge;
+- computing statistics — Matches are read by statistics computation, not
+responsible for it;
+- deciding whether a proposed change is approved — that belongs to
+MatchEdit; Match only enforces its own invariants once a change is
+applied.
+
+---
+
+## Invariants
+
+- A Match has exactly one owner, fixed at creation. Ownership is never
+transferred.
+- A Match has at least one MatchParticipant.
+- A Match has at most one MatchParticipant per GhostPlayer.
+- A Match has at most one Playset.
+- A Match's Playset, if any, must belong to the same Game as the Match itself.
+- A Match's Edit Requests Toggle can only be changed by its owner, and has
+no effect once the Match is Locked.
+- A Locked Match accepts no further MatchEdits, regardless of the Edit
+Requests Toggle or any TrustedEditor grant (see **MatchEdit**).
+
+---
+
+## Lifecycle
+
+### Recorded
+
+A Match is created by its owner, together with its MatchParticipants (and
+their Loadouts, where applicable) and, optionally, a Playset and/or a
+Community reference.
+
+### Evolution
+
+A Match's Game, MatchParticipants, and Loadouts change only through an
+approved MatchEdit. Which Playset a Match references can likewise only
+change through an approved MatchEdit — this changes the reference, never
+the content of any Playset itself, since Playset content is immutable
+(see **Playset**). Its Edit Requests Toggle can be changed by its owner
+directly, at any time, independently of MatchEdit.
+
+### End State
+
+A Match becomes Locked when its configured edit window elapses. Locking
+is permanent. Outside of Locking, a Match is never deleted while it
+remains part of any participant's gaming history.
+
+---
+
+## Relationships
+
+- Match references Game;
+- Match references Playset (0..1);
+- Match owns MatchParticipant (1..N);
+- Match optionally references Community;
+- Match is recorded by (owned by) User;
+- Match is targeted by MatchEdit.
+
+---
+
+## Domain Events
+
+- MatchRecorded
+- MatchLocked
+- EditRequestsEnabled
+- EditRequestsDisabled
+
+---
+
+## Aggregate Design
+
+Match is the Aggregate Root. MatchParticipant and Loadout are child
+entities within it — none of them has identity or lifecycle independent of
+their Match. All consistency rules that span multiple MatchParticipants (e.g.
+no duplicate GhostPlayer, a coherent set of results) are enforced here,
+which is also why MatchParticipant and Loadout were deliberately not modeled
+as their own Aggregate Roots.
+
+---
+
+## Open Questions
+
+- **Minimum MatchParticipants**: this model allows a Match with a single
+MatchParticipant, to accommodate solo games. Confirm this is intended rather
+than requiring at least two.

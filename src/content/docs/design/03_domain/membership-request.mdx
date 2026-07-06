@@ -1,0 +1,105 @@
+---
+title: MembershipRequest
+description: A pending request to join a Community that requires approval.
+sidebar:
+    label: MembershipRequest
+    order: 16
+---
+
+## Purpose
+
+A MembershipRequest represents a pending request to join a Community whose
+JoinPolicy is `RequiresApproval`. It exists so that a Community's owner or
+admins can control who becomes a member, without needing to reject anyone
+by default — most requests are expected to be approved.
+
+For a Community whose JoinPolicy is `Open`, no MembershipRequest is created
+at all: a Membership is added directly.
+
+---
+
+## Responsibilities
+
+A MembershipRequest is responsible for:
+
+- proposing that one User becomes a member of one Community;
+- being approved or rejected by the Community's owner or any of its
+admins;
+- resulting in a Membership once approved.
+
+---
+
+## Not Responsible For
+
+A MembershipRequest is NOT responsible for:
+
+- deciding the Community's JoinPolicy — that belongs to Community itself,
+and determines whether a MembershipRequest is needed at all;
+- granting any rights beyond membership — approval never makes someone an
+admin; that is governed entirely by the Community's AdminGroup.
+
+---
+
+## Invariants
+
+- A MembershipRequest targets exactly one Community and is proposed by
+exactly one User.
+- A MembershipRequest only exists for a Community whose JoinPolicy is
+`RequiresApproval`.
+- A MembershipRequest is immutable after creation; its lifecycle proceeds
+only through approval events.
+- A MembershipRequest may only be approved or rejected by the target
+Community's owner or an admin (a member of its AdminGroup).
+- A MembershipRequest cannot be created by a User who already has a
+Membership in the target Community.
+- Rejecting a MembershipRequest creates no Membership; the User remains
+unable to record shared history within the Community.
+
+---
+
+## Lifecycle
+
+### Pending
+
+Created when a User requests to join a Community whose JoinPolicy is
+`RequiresApproval`.
+
+### Approved
+
+An owner or admin approves the request. A Membership is created for the
+requesting User.
+
+### Rejected
+
+An owner or admin declines the request. No Membership is created. A new
+MembershipRequest may be submitted again later.
+
+---
+
+## Relationships
+
+```
+MembershipRequest
+├── proposedBy → User
+├── targets    → Community
+├── decidedBy  → User (the Community's owner or an admin)
+├── resultsIn  → Membership (if approved)
+```
+
+---
+
+## Domain Events
+
+- MembershipRequestCreated
+- MembershipRequestApproved
+- MembershipRequestRejected
+
+---
+
+## Aggregate Design
+
+MembershipRequest is its own Aggregate Root, mirroring ClaimRequest and
+MatchEdit: it coordinates a single approval decision without owning the
+Community itself. Applying an approved request (creating the Membership) is
+a command against the Community aggregate, not something MembershipRequest
+performs directly.
