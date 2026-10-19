@@ -1,91 +1,34 @@
 /* ─── Fonts ──────────────────────────────────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
 
-/* ─── Design Tokens ──────────────────────────────────────────────────── */
+/* ─── Site aliases ───────────────────────────────────────────────────── */
+/* The colours, fonts and the Starlight theme come from stratastax-design (src/styles/design, copied by
+   npm run sync, loaded before this file). These aliases keep the names the components use; the
+   fallbacks only apply to a build without the sync. */
 :root {
-  /* Default to Dark Mode */
-  --color-bg: #0F1117;
-  --color-surface: #1C2030;
-  --color-surface-high: #252840;
-  --color-primary: #4E7CFF;
-  --color-primary-dim: #2A4ECC;
-  --color-accent: #8B5CF6;
-  --color-accent-dim: #6D3FD4;
-  --color-text: #E2E8F0;
-  --color-muted: #64748B;
-  --color-border: rgba(78, 124, 255, 0.15);
+  --color-bg: var(--stx-background, #F8F9FF);
+  --color-surface: var(--stx-surface, #FFFFFF);
+  --color-surface-high: var(--stx-subtle, #EEF0FB);
+  --color-primary: var(--stx-primary, #4F46E5);
+  --color-on-primary: var(--stx-on-primary, #FFFFFF);
+  --color-accent: var(--stx-highlight, #7C3AED);
+  --color-text: var(--stx-on-background, #20243A);
+  --color-muted: var(--stx-muted, #565C7E);
+  --color-border: var(--stx-border, #E0E3F2);
 
-  --font-display: "Plus Jakarta Sans", sans-serif;
-  --font-body: Inter, sans-serif;
+  --font-display: var(--stx-font-heading, 'Plus Jakarta Sans', sans-serif);
+  --font-body: var(--stx-font-sans, Inter, sans-serif);
 
-  --radius-card: 16px;
-  --radius-pill: 999px;
+  --radius-card: var(--stx-radius-lg, 12px);
+  --radius-pill: var(--stx-radius-full, 9999px);
 
-  --gradient-brand: linear-gradient(135deg, #4E7CFF, #8B5CF6);
-  --gradient-brand-h: linear-gradient(90deg, #4E7CFF, #8B5CF6);
-}
-
-[data-theme='light'] {
-  --color-bg: #FFFFFF;
-  --color-surface: #F8FAFC;
-  --color-surface-high: #F1F5F9;
-  --color-primary: #3B82F6;
-  --color-primary-dim: #2563EB;
-  --color-accent: #7C3AED;
-  --color-accent-dim: #6D28D9;
-  --color-text: #0F172A;
-  --color-muted: #64748B;
-  --color-border: rgba(59, 130, 246, 0.12);
-}
-
-/* ─── Starlight dark theme overrides ────────────────────────────────── */
-:root,
-[data-theme='dark'] {
-    --sl-color-bg:              #0F1117;
-    --sl-color-bg-nav:          #0F1117;
-    --sl-color-bg-sidebar:      #131620;
-    --sl-color-hairline:        rgba(78, 124, 255, 0.12);
-    --sl-color-hairline-light:  rgba(78, 124, 255, 0.08);
-    --sl-color-text:            #E2E8F0;
-    --sl-color-text-accent:     #4E7CFF;
-    --sl-color-accent:          #4E7CFF;
-    --sl-color-accent-high:     #8B5CF6;
-    --sl-color-white:           #E2E8F0;
-    --sl-color-gray-1:          #E2E8F0;
-    --sl-color-gray-2:          #94A3B8;
-    --sl-color-gray-3:          #475569;
-    --sl-color-gray-4:          #2D3748;
-    --sl-color-gray-5:          #1C2030;
-    --sl-color-gray-6:          #131620;
-    --sl-color-black:           #0F1117;
-    --sl-font:                  'Inter', sans-serif;
-    --sl-font-system:           'Inter', sans-serif;
-}
-
-/* ─── Starlight light theme overrides ────────────────────────────────── */
-[data-theme='light'] {
-    --sl-color-bg:              #FFFFFF;
-    --sl-color-bg-nav:          #FFFFFF;
-    --sl-color-bg-sidebar:      #F8FAFC;
-    --sl-color-hairline:        rgba(59, 130, 246, 0.12);
-    --sl-color-hairline-light:  rgba(59, 130, 246, 0.08);
-    --sl-color-text:            #0F172A;
-    --sl-color-text-accent:     #3B82F6;
-    --sl-color-accent:          #3B82F6;
-    --sl-color-accent-high:     #7C3AED;
-    --sl-color-white:           #0F172A;
-    --sl-color-gray-1:          #1E293B;
-    --sl-color-gray-2:          #475569;
-    --sl-color-gray-3:          #64748B;
-    --sl-color-gray-4:          #94A3B8;
-    --sl-color-gray-5:          #E2E8F0;
-    --sl-color-gray-6:          #F1F5F9;
-    --sl-color-black:           #FFFFFF;
+  --gradient-brand: var(--stx-gradient-brand, linear-gradient(135deg, #4F46E5, #8B5CF6));
+  --gradient-brand-h: linear-gradient(90deg, var(--color-primary), var(--stx-focus, #8B5CF6));
 }
 
 /* ─── Global base ────────────────────────────────────────────────────── */
 body {
-    font-family: 'Inter', sans-serif;
+    font-family: var(--font-body);
     background-color: var(--color-bg);
     color: var(--color-text);
     -webkit-font-smoothing: antialiased;
@@ -93,7 +36,7 @@ body {
 
 /* ─── Gradient text utility ──────────────────────────────────────────── */
 .text-gradient {
-    background: linear-gradient(135deg, #4E7CFF, #8B5CF6);
+    background: var(--gradient-brand);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -122,7 +65,7 @@ body {
     height: 600px;
     top: -200px;
     left: -100px;
-    background: radial-gradient(circle, rgba(78, 124, 255, 0.18) 0%, transparent 70%);
+    background: radial-gradient(circle, color-mix(in srgb, var(--color-primary) 18%, transparent) 0%, transparent 70%);
 }
 
 .hero-mesh::after {
@@ -130,7 +73,7 @@ body {
     height: 500px;
     top: -100px;
     right: -100px;
-    background: radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, transparent 70%);
+    background: radial-gradient(circle, color-mix(in srgb, var(--color-accent) 15%, transparent) 0%, transparent 70%);
     animation-delay: -6s;
 }
 
@@ -146,6 +89,6 @@ body {
 
 /* ─── Starlight nav logo ─────────────────────────────────────────────── */
 .site-title {
-    font-family: 'Plus Jakarta Sans', sans-serif !important;
+    font-family: var(--font-display) !important;
     font-weight: 800 !important;
 }

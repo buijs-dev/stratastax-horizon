@@ -1,90 +1,85 @@
 ---
+
 title: Kotlin Guidelines
-description: Idiomatic Kotlin rules for StrataStax focusing on rich domain modeling, functional thinking, and pragmatic OOP.
+description: Kotlin guidelines for StrataStax, focused on explicit domain modeling, type safety, immutability, and pragmatic design.
 sidebar:
     label: Kotlin
     order: 4
----
+--------
 
-> Kotlin is used to model the domain as clearly, safely, and expressively as possible.
+> Kotlin is used to model the StrataStax domain clearly, safely, and explicitly.
 
-We combine **functional programming for behavior** with **object-oriented programming for domain modeling**.
+StrataStax combines **object-oriented domain modeling** with **functional techniques**.
 
-The goal is not idiomatic Kotlin for its own sake, but a codebase that is easy to reason about, safe by design, and aligned with the business language.
+The goal is not to write Kotlin in a particular style for its own sake. The goal is code that:
 
----
+* expresses the domain clearly
+* makes invalid states difficult to create
+* makes behavior easy to find
+* keeps side effects at clear boundaries
+* uses the type system to prevent mistakes
+* remains simple when no additional abstraction is needed
 
-# 1. Core Kotlin Philosophy
-
-## 1.1 Model the Domain, Not the Data
-
-Code should reflect business concepts, not technical representations.
-
-Prefer domain types over primitives:
-
-```kotlin
-@JvmInline
-value class CustomerId(val value: UUID)
-
-@JvmInline
-value class EmailAddress(val value: String)
-```
-
-Avoid:
-
-```kotlin
-fun sendEmail(customerId: UUID, email: String)
-```
-
-Prefer:
-
-```kotlin
-fun sendEmail(customerId: CustomerId, email: EmailAddress)
-```
+Choose the **simplest construct that accurately expresses the concept**.
 
 ---
 
-## 1.2 Behaviour Belongs to the Model
+# 1. MUST
 
-Objects should own their behavior.
+These rules protect the architecture and the correctness of the system.
 
-Avoid utility classes that manipulate passive data.
+They are not style preferences.
 
-Good:
+---
+
+## 1.1 Domain code must not depend on infrastructure
+
+The domain must not perform I/O or depend on persistence, HTTP, messaging, frameworks, or other infrastructure concerns.
+
+**Good:**
 
 ```kotlin
-data class Money(
-    val amount: BigDecimal,
-    val currency: Currency
+data class Match(
+    val id: MatchId,
+    val status: MatchStatus
 ) {
+    fun finalize(): Match {
+        require(status == MatchStatus.OPEN)
 
-    operator fun plus(other: Money): Money {
-        require(currency == other.currency)
-        return copy(amount = amount + other.amount)
+        return copy(status = MatchStatus.FINALIZED)
     }
 }
 ```
 
-Bad:
+**Bad:**
 
 ```kotlin
-object MoneyUtils {
-    fun add(a: Money, b: Money): Money = ...
+data class Match(
+    val id: MatchId,
+    val status: MatchStatus
+) {
+    suspend fun finalize(repository: MatchRepository): Match {
+        // Domain object performing persistence
+        ...
+    }
 }
 ```
 
+The domain describes **what the domain means**. Application and infrastructure layers deal with **how things are retrieved, stored, or communicated**.
+
 ---
 
-## 1.3 Make Illegal States Impossible
+## 1.2 Domain invariants must be enforced at the domain boundary
 
-Invalid objects should not exist.
+An invalid domain object should not be constructible through its normal public API.
 
-Use constructors and factories to enforce invariants.
+**Good:**
 
 ```kotlin
 @JvmInline
-value class Percentage private constructor(val value: Int) {
-
+value class Percentage private constructor(
+    val value: Int
+) {
     companion object {
         fun of(value: Int): Percentage {
             require(value in 0..100)
@@ -94,383 +89,1416 @@ value class Percentage private constructor(val value: Int) {
 }
 ```
 
----
-
-## 1.4 Prefer Immutability
-
-- Always prefer `val`
-- Avoid shared mutable state
-- Treat mutation as an edge concern
+Now:
 
 ```kotlin
-val users: List<User> = emptyList()
+Percentage.of(50)
 ```
 
-Not:
+is valid, while:
 
 ```kotlin
-var users = mutableListOf<User>()
+Percentage.of(150)
 ```
 
----
+fails immediately.
 
-# 2. Domain Modeling
-
-## 2.1 Rich Domain Models
-
-Domain objects are not data holders. They contain behavior and invariants.
-
-```kotlin
-data class Order(
-    val id: OrderId,
-    val items: List<OrderItem>,
-    val status: OrderStatus
-) {
-
-    fun ship(): Order {
-        require(status == OrderStatus.PAID)
-        return copy(status = OrderStatus.SHIPPED)
-    }
-}
-```
-
-Avoid anemic models with external services manipulating state.
+Avoid creating objects that require every caller to remember their invariants.
 
 ---
 
-## 2.2 Sealed Hierarchies over Enums
+## 1.3 Domain concepts must not be represented by ambiguous primitives
 
-Use sealed types for domain states with behavior or structure.
+When a primitive has domain meaning, represent that meaning in the type system.
 
-Good:
-
-```kotlin
-sealed interface PaymentMethod
-
-data class Ideal(val issuer: String) : PaymentMethod
-data class CreditCard(val lastFourDigits: String) : PaymentMethod
-data object Cash : PaymentMethod
-```
-
-Bad:
+**Bad:**
 
 ```kotlin
-enum class PaymentType { IDEAL, CREDIT_CARD, CASH }
-
-data class Payment(
-    val type: PaymentType,
-    val issuer: String?
-)
+fun findMatch(id: UUID): Match?
+fun findGame(id: UUID): Game?
 ```
 
-Sealed types enforce completeness at compile time.
+It is easy to accidentally pass the wrong UUID.
 
----
-
-## 2.3 Value Classes
-
-Use value classes for domain primitives.
-
-- Improves type safety
-- Prevents primitive obsession
-- Makes intent explicit
+**Good:**
 
 ```kotlin
 @JvmInline
-value class OrderId(val value: UUID)
+value class MatchId(val value: UUID)
+
+@JvmInline
+value class GameId(val value: UUID)
+
+fun findMatch(id: MatchId): Match?
+fun findGame(id: GameId): Game?
 ```
+
+This is particularly important for identifiers and other values where mixing types would be a meaningful bug.
 
 ---
 
-## 2.4 Factories and Constructors
+## 1.4 Domain behavior must respect domain invariants
 
-Use primary constructors for simple invariants.
+Operations that change domain state must not allow invalid transitions.
 
-Use factories when construction is complex.
+**Good:**
 
 ```kotlin
-class EmailAddress private constructor(val value: String) {
+data class Match(
+    val id: MatchId,
+    val status: MatchStatus
+) {
+    fun finalize(): Match {
+        require(status == MatchStatus.OPEN)
 
-    companion object {
-        fun of(value: String): EmailAddress {
-            require(value.contains("@"))
-            return EmailAddress(value)
-        }
+        return copy(status = MatchStatus.FINALIZED)
     }
 }
 ```
 
+**Bad:**
+
+```kotlin
+data class Match(
+    val id: MatchId,
+    val status: MatchStatus
+)
+```
+
+combined with:
+
+```kotlin
+match.copy(status = MatchStatus.FINALIZED)
+```
+
+everywhere in the application.
+
+The latter spreads knowledge of domain rules across the codebase.
+
 ---
 
-# 3. Functional Programming in Kotlin
+## 1.5 Domain code must not hide side effects
 
-## 3.1 Prefer Pure Functions
+Pure domain logic should not secretly perform:
 
-Functions should:
+* database access
+* HTTP calls
+* messaging
+* filesystem access
+* logging with important semantics
+* clock access
+* random number generation
 
-- be deterministic
-- have no side effects
-- return values
+For example:
+
+**Good:**
 
 ```kotlin
 fun calculateTotal(items: List<Money>): Money =
-    items.reduce(Money::plus)
+    items.fold(Money.zero(items.first().currency)) { total, item ->
+        total + item
+    }
 ```
+
+The result depends only on the input.
+
+Side effects belong at explicit boundaries.
 
 ---
 
-## 3.2 Prefer Expressions
+## 1.6 Do not use `!!`
+
+Avoid the not-null assertion.
+
+**Bad:**
 
 ```kotlin
-val result = when (status) {
-    OrderStatus.PAID -> "Paid"
-    OrderStatus.PENDING -> "Pending"
-}
+val player = players.firstOrNull { it.id == id }!!
 ```
-
-Avoid statement-heavy logic.
-
----
-
-## 3.3 Collections
-
-Prefer functional operations:
-
-- map
-- filter
-- fold
-- associate
-
-Avoid imperative loops when readability improves.
-
----
-
-## 3.4 Side Effects at the Edges
-
-Side effects belong in infrastructure or application boundaries:
-
-- database calls
-- HTTP calls
-- messaging
-- logging
-
-Core domain remains pure.
-
----
-
-# 4. Object-Oriented Design
-
-## 4.1 Prefer Composition
-
-Avoid inheritance unless modelling a true type hierarchy.
-
----
-
-## 4.2 Avoid Utility Classes
-
-Utility classes often indicate missing domain modeling.
-
-Bad:
-
-```kotlin
-object OrderUtils
-object ValidationUtils
-```
-
-Prefer domain methods instead.
-
----
-
-## 4.3 Extension Functions (Carefully)
-
-Use for readability, not business logic orchestration.
-
-Good:
-
-```kotlin
-fun String.toEmail(): EmailAddress
-```
-
-Bad:
-
-```kotlin
-fun List<Order>.processAllOrdersAndSendEmails()
-```
-
----
-
-# 5. Null Safety
-
-- Avoid nullable types where possible
-- Prefer sealed types over nullable ambiguity
-- Never use `!!`
-
-Bad:
-
-```kotlin
-val email: String?
-```
-
-Better:
-
-```kotlin
-EmailAddress
-```
-
----
-
-# 6. Error Handling Model
-
-This is a core architectural decision.
-
-## 6.1 Two Categories of Failures
-
-### 1. Invalid State (Exception)
-
-If something should never exist → exception.
-
-Examples:
-
-- invalid constructor input
-- broken invariants
-- illegal domain transitions
-
-```kotlin
-class InvalidOrderStateException(message: String) : RuntimeException(message)
-```
-
----
-
-### 2. Expected Outcome (Result Model)
-
-If something can happen in normal flow → model it explicitly.
-
-```kotlin
-sealed interface FindCustomerResult {
-    data class Found(val customer: Customer) : FindCustomerResult
-    data object NotFound : FindCustomerResult
-}
-```
-
----
-
-### 3. Infrastructure Failure (Exception)
-
-- database down
-- network timeout
-- serialization failure
-
-These are exceptions.
-
----
-
-## 6.2 Rule Matrix
-
-| Situation | Approach |
-|----------|---------|
-| Invalid object state | Exception |
-| Constructor validation failure | Exception |
-| Expected business outcome | Result / sealed type |
-| Missing data in query | Result / nullable |
-| Infrastructure failure | Exception |
-| Programming error | Exception |
-
----
-
-## 6.3 Custom Exceptions
-
-Use domain-level exceptions sparingly.
 
 Prefer:
 
 ```kotlin
-sealed class DomainException(message: String) : RuntimeException(message)
+val player = players.firstOrNull { it.id == id }
+    ?: throw PlayerNotFound(id)
 ```
 
-Avoid excessive granularity.
+Or, where the absence is an expected business outcome:
+
+```kotlin
+return players
+    .firstOrNull { it.id == id }
+```
+
+`!!` removes information from the type system instead of handling the possibility explicitly.
 
 ---
 
-## 6.4 Core Principle
+## 1.7 Expected business outcomes must be represented explicitly
 
-> Exceptions protect invariants. Results model business outcomes.
+Do not use exceptions for normal business alternatives.
+
+**Bad:**
+
+```kotlin
+try {
+    claimPlayer(playerId)
+} catch (AlreadyClaimedException) {
+    ...
+}
+```
+
+**Good:**
+
+```kotlin
+sealed interface ClaimPlayerResult {
+    data class Claimed(
+        val player: CanonicalPlayer
+    ) : ClaimPlayerResult
+
+    data object AlreadyClaimed : ClaimPlayerResult
+
+    data object ApprovalRequired : ClaimPlayerResult
+}
+```
+
+The caller can now see the possible business outcomes directly.
 
 ---
 
-# 7. Collections & Control Flow
+## 1.8 Exceptions must represent exceptional conditions
+
+Use exceptions for:
+
+* violated invariants
+* invalid construction
+* infrastructure failures
+* programming errors
+
+Do not use exceptions as ordinary control flow.
+
+For example:
+
+```kotlin
+require(status == MatchStatus.OPEN)
+```
+
+is appropriate when finalizing an already finalized match violates an invariant.
+
+A business outcome such as "player already claimed" should normally not be an exception.
+
+---
+
+## 1.9 Infrastructure failures must not become domain concepts
+
+A database timeout is not a domain state.
+
+Avoid:
+
+```kotlin
+sealed interface MatchResult {
+    data class Found(val match: Match) : MatchResult
+    data object DatabaseTimeout : MatchResult
+}
+```
+
+The domain should not need to understand database failure modes.
+
+Infrastructure failures can propagate as exceptions or be translated at an application boundary.
+
+---
+
+# 2. DEFAULT
+
+These are the normal choices in StrataStax.
+
+They are strong defaults, not absolute laws.
+
+A deviation is fine when it produces clearer or safer code.
+
+---
+
+## 2.1 Prefer immutable domain state
+
+Use `val` by default.
+
+**Default:**
+
+```kotlin
+data class Match(
+    val id: MatchId,
+    val participants: List<MatchParticipant>,
+    val status: MatchStatus
+)
+```
+
+When state changes, return a new value:
+
+```kotlin
+fun addParticipant(
+    participant: MatchParticipant
+): Match =
+    copy(
+        participants = participants + participant
+    )
+```
+
+Prefer this over exposing mutable domain state:
+
+```kotlin
+class Match {
+    val participants = mutableListOf<MatchParticipant>()
+}
+```
+
+Immutability makes state transitions explicit and easier to reason about.
+
+---
+
+## 2.2 Prefer immutable collections in domain models
 
 Prefer:
 
 ```kotlin
-orders.filter { it.isPaid }
+data class Group(
+    val members: Set<PlayerId>
+)
 ```
 
 over:
 
 ```kotlin
-for (order in orders) {
+data class Group(
+    val members: MutableSet<PlayerId>
+)
+```
+
+The domain object should own its state rather than exposing a mutable collection.
+
+Mutable collections may still be appropriate inside controlled implementation boundaries.
+
+---
+
+## 2.3 Prefer `data class` for immutable domain state
+
+When a domain concept primarily consists of immutable state, start with a `data class`.
+
+```kotlin
+data class MatchParticipant(
+    val player: PlayerRef,
+    val outcome: Outcome?,
+    val score: Score?
+)
+```
+
+Add behavior when that behavior is genuinely part of the concept.
+
+Do not add methods merely to make the class appear "rich".
+
+---
+
+## 2.4 Put intrinsic behavior on the domain concept
+
+Behavior belongs on a domain type when it is naturally part of that concept.
+
+```kotlin
+data class Match(
+    val status: MatchStatus
+) {
+    fun finalize(): Match {
+        require(status == MatchStatus.OPEN)
+
+        return copy(status = MatchStatus.FINALIZED)
+    }
+}
+```
+
+This is preferable to:
+
+```kotlin
+object MatchUtils {
+    fun finalize(match: Match): Match = ...
+}
+```
+
+However, not all behavior belongs on a domain object.
+
+Application orchestration remains outside:
+
+```kotlin
+class FinalizeMatch(
+    private val repository: MatchRepository
+) {
+    suspend fun execute(id: MatchId): Match {
+        val match = repository.find(id)
+            ?: throw MatchNotFound(id)
+
+        val finalized = match.finalize()
+
+        repository.update(finalized)
+
+        return finalized
+    }
+}
+```
+
+The distinction is:
+
+```text
+Match.finalize()
+        ↓
+domain behavior
+
+FinalizeMatch.execute()
+        ↓
+application orchestration
+
+MatchRepository
+        ↓
+persistence
+```
+
+---
+
+## 2.5 Prefer pure transformations for independent operations
+
+Not every operation needs to become a method.
+
+For example:
+
+```kotlin
+fun calculateStandings(
+    matches: List<Match>
+): Standings =
+    ...
+```
+
+is often clearer than forcing the behavior onto `Match`:
+
+```kotlin
+match.calculateStandings(...)
+```
+
+A useful rule is:
+
+> If behavior is intrinsic to one domain concept, consider a method.
+> If it transforms or combines multiple concepts, consider a pure function.
+
+---
+
+## 2.6 Prefer explicit control flow
+
+Use expressions when they make the intent obvious.
+
+```kotlin
+val label = when (status) {
+    MatchStatus.OPEN -> "Open"
+    MatchStatus.FINALIZED -> "Finalized"
+}
+```
+
+Avoid unnecessary mutable variables and statement-heavy code.
+
+But clarity wins over expression purity.
+
+---
+
+## 2.7 Prefer the simplest collection operation that expresses intent
+
+Use:
+
+```kotlin
+val winners =
+    participants.filter { it.outcome == Outcome.Win }
+```
+
+when filtering is clearly what is happening.
+
+Use:
+
+```kotlin
+val ids =
+    participants.map(MatchParticipant::playerId)
+```
+
+when mapping is clearly what is happening.
+
+But do not force a complicated chain of operations when a loop is easier to understand.
+
+This is perfectly acceptable:
+
+```kotlin
+val result = mutableListOf<PlayerId>()
+
+for (participant in participants) {
+    if (participant.outcome == Outcome.Win) {
+        result += participant.playerId
+    }
+}
+```
+
+The goal is **clarity**, not maximum use of functional operators.
+
+---
+
+## 2.8 Prefer enums for simple closed values
+
+Use an enum when variants are simply named values.
+
+```kotlin
+enum class MatchStatus {
+    OPEN,
+    FINALIZED
+}
+```
+
+Do not turn every enum into a sealed hierarchy.
+
+---
+
+## 2.9 Prefer sealed types when variants have meaningful differences
+
+Use sealed types when variants carry different information or behavior.
+
+```kotlin
+sealed interface PaymentMethod
+
+data class Ideal(
+    val issuer: String
+) : PaymentMethod
+
+data class CreditCard(
+    val lastFourDigits: String
+) : PaymentMethod
+
+data object Cash : PaymentMethod
+```
+
+This allows exhaustive handling:
+
+```kotlin
+fun describe(method: PaymentMethod): String =
+    when (method) {
+        is Ideal -> method.issuer
+        is CreditCard -> "**** ${method.lastFourDigits}"
+        Cash -> "Cash"
+    }
+```
+
+The rule is not "sealed types are better than enums".
+
+The rule is:
+
+> **Use the type that best expresses the differences between the variants.**
+
+---
+
+## 2.10 Prefer nullable values when absence is genuinely optional
+
+Nullability is not inherently bad.
+
+This can be perfectly correct:
+
+```kotlin
+data class MatchParticipant(
+    val player: PlayerRef,
+    val score: Score?
+)
+```
+
+If a participant legitimately may not have a score, `Score?` expresses that fact.
+
+Do not replace every nullable value with a sealed hierarchy merely to avoid `?`.
+
+Use a richer type when the different states have meaningful domain semantics.
+
+---
+
+## 2.11 Prefer `Result` for generic success/failure
+
+Kotlin's `Result` is useful when the distinction is fundamentally:
+
+```text
+success
+failure
+```
+
+For example:
+
+```kotlin
+fun parseConfiguration(
+    input: String
+): Result<Configuration>
+```
+
+Do not use `Result` merely because a function can return different business outcomes.
+
+For meaningful business alternatives, prefer a domain-specific sealed type:
+
+```kotlin
+sealed interface ClaimResult {
+    data class Claimed(val player: Player) : ClaimResult
+    data object AlreadyClaimed : ClaimResult
+    data object ApprovalRequired : ClaimResult
+}
+```
+
+---
+
+## 2.12 Keep constructors simple when possible
+
+Use a constructor when invariants are simple.
+
+```kotlin
+data class Score(
+    val value: Int
+) {
+    init {
+        require(value >= 0)
+    }
+}
+```
+
+Use a factory when construction requires:
+
+* parsing
+* normalization
+* multiple validation steps
+* choosing between variants
+* non-obvious construction logic
+
+For example:
+
+```kotlin
+class EmailAddress private constructor(
+    val value: String
+) {
+    companion object {
+        fun of(value: String): EmailAddress {
+            val normalized = value.trim().lowercase()
+
+            require('@' in normalized)
+
+            return EmailAddress(normalized)
+        }
+    }
+}
+```
+
+Do not introduce factories just because factories are considered "DDD".
+
+---
+
+## 2.13 Avoid utility classes for domain behavior
+
+Avoid:
+
+```kotlin
+object MatchUtils
+object PlayerUtils
+object ValidationUtils
+```
+
+when the functions actually describe domain behavior.
+
+Prefer:
+
+```kotlin
+match.finalize()
+```
+
+or:
+
+```kotlin
+fun calculateStandings(matches: List<Match>): Standings
+```
+
+A pure function is preferable to a utility object when the behavior is independent of an object.
+
+---
+
+## 2.14 Keep application services thin but meaningful
+
+Application services/use cases may coordinate:
+
+* repositories
+* domain operations
+* transactions
+* external systems
+
+They should not duplicate domain rules.
+
+Prefer:
+
+```kotlin
+suspend fun execute(id: MatchId): Match {
+    val match = repository.find(id)
+        ?: throw MatchNotFound(id)
+
+    val finalized = match.finalize()
+
+    repository.update(finalized)
+
+    return finalized
+}
+```
+
+Avoid a service that merely moves property manipulation out of the model:
+
+```kotlin
+suspend fun execute(id: MatchId) {
+    val match = repository.find(id)!!
+
+    require(match.status == MatchStatus.OPEN)
+
+    repository.update(
+        match.copy(status = MatchStatus.FINALIZED)
+    )
+}
+```
+
+The latter spreads the invariant outside `Match`.
+
+---
+
+# 3. WHEN USEFUL
+
+These are powerful tools, but should be introduced deliberately.
+
+---
+
+## 3.1 Use value classes when they add domain meaning
+
+Good:
+
+```kotlin
+@JvmInline
+value class MatchId(val value: UUID)
+```
+
+Good:
+
+```kotlin
+@JvmInline
+value class EmailAddress private constructor(
+    val value: String
+)
+```
+
+But do not create a type for every primitive merely because you can.
+
+This:
+
+```kotlin
+val retryCount: Int
+```
+
+does not automatically need:
+
+```kotlin
+RetryCount
+```
+
+Use a domain type when it improves correctness, readability, or prevents meaningful mistakes.
+
+---
+
+## 3.2 Use extension functions when they improve the API
+
+Simple conversions are a good use:
+
+```kotlin
+fun String.toEmailAddress(): EmailAddress =
+    EmailAddress.of(this)
+```
+
+Extensions can also express useful domain behavior:
+
+```kotlin
+fun Match.winner(): MatchParticipant? =
+    participants.firstOrNull {
+        it.outcome == Outcome.Win
+    }
+```
+
+But avoid hiding large workflows behind extensions:
+
+```kotlin
+fun List<Match>.processAllOrdersAndSendEmails() {
     ...
 }
 ```
 
-Use loops only when necessary for clarity or performance.
+The issue is not "business logic in extensions".
+
+The issue is **hiding important behavior behind an inappropriate receiver**.
 
 ---
 
-# 8. Consistency Rules
+## 3.3 Use sealed hierarchies for state machines
 
-- Prefer `val` over `var`
-- Prefer data classes for immutable models
-- Prefer sealed types over enums for domain modeling
-- Prefer composition over inheritance
-- Prefer explicit over implicit behavior
+When states have different allowed operations, sealed types can model the state machine directly.
+
+For example:
+
+```kotlin
+sealed interface MatchState {
+    data object Open : MatchState
+    data object Finalized : MatchState
+}
+```
+
+If the states carry different data or allow fundamentally different behavior, this can be stronger than an enum plus runtime checks.
+
+However, do not introduce a sealed state hierarchy when:
+
+```kotlin
+enum class MatchStatus {
+    OPEN,
+    FINALIZED
+}
+```
+
+is already perfectly expressive.
 
 ---
 
-# 9. Anti-Patterns
+## 3.4 Use pure functions for calculations
+
+Calculations are often naturally functional.
+
+```kotlin
+fun calculateTotal(
+    items: List<Money>
+): Money =
+    items.fold(Money.zero(items.first().currency)) { total, item ->
+        total + item
+    }
+```
+
+This is especially useful for:
+
+* scoring
+* rankings
+* filtering
+* projections
+* transformations
+* validation calculations
+
+Pure functions are easy to test because they have no external dependencies.
+
+---
+
+## 3.5 Use mutation inside controlled boundaries when it is clearer
+
+Immutability is the default for domain state.
+
+It is not a ban on mutation.
+
+An in-memory repository may reasonably use:
+
+```kotlin
+class InMemoryMatchRepository : MatchRepository {
+
+    private val matches = mutableMapOf<MatchId, Match>()
+
+    override suspend fun save(match: Match) {
+        matches[match.id] = match
+    }
+
+    override suspend fun find(id: MatchId): Match? =
+        matches[id]
+}
+```
+
+The mutable state is:
+
+* local
+* encapsulated
+* controlled
+* not exposed as domain state
+
+That is a perfectly reasonable use of mutation.
+
+---
+
+## 3.6 Use loops when they improve clarity or performance
+
+Functional code is not inherently better.
+
+This:
+
+```kotlin
+val ids =
+    participants
+        .filter { it.outcome == Outcome.Win }
+        .map { it.playerId }
+```
+
+is excellent when the transformation is simple.
+
+But for a more involved operation:
+
+```kotlin
+val standings = mutableMapOf<PlayerId, Int>()
+
+for (match in matches) {
+    for (participant in match.participants) {
+        val points = pointsFor(participant)
+        standings.merge(participant.playerId, points, Int::plus)
+    }
+}
+```
+
+a loop may be easier to understand and avoid unnecessary intermediate collections.
+
+Use the clearest implementation.
+
+---
+
+## 3.7 Use local mutable variables for complex algorithms
+
+A pure function can still contain local mutation.
+
+For example:
+
+```kotlin
+fun calculateRanking(
+    matches: List<Match>
+): Ranking {
+    val scores = mutableMapOf<PlayerId, Int>()
+
+    for (match in matches) {
+        ...
+    }
+
+    return Ranking(scores)
+}
+```
+
+This does not violate the architectural goal of immutability.
+
+The important distinction is:
+
+```text
+controlled local mutation
+        ↓
+implementation detail
+
+shared mutable domain state
+        ↓
+architectural complexity
+```
+
+Prefer the former when it makes an algorithm substantially clearer.
+
+---
+
+## 3.8 Use explicit types when they communicate intent
+
+Type inference is usually excellent:
+
+```kotlin
+val match = repository.find(id)
+```
+
+But explicit types can improve documentation at boundaries:
+
+```kotlin
+val result: ClaimPlayerResult =
+    claimPlayer(command)
+```
+
+or when inference becomes difficult to follow.
+
+Do not add types merely because Kotlin allows them.
+
+---
+
+## 3.9 Use abstractions only when they have a purpose
+
+Do not create an interface simply because there is one implementation.
 
 Avoid:
 
-- Anemic domain models
-- Utility classes for business logic
-- Primitive obsession
-- Overuse of nullable types
-- Hidden side effects
-- `!!` operator
-- Service classes that only delegate
-- Enums with business logic branching everywhere
+```kotlin
+interface MatchService
 
----
-
-# 10. AI Agent Instructions
-
-When generating Kotlin code:
-
-- Model the domain explicitly
-- Use value classes for primitives
-- Prefer sealed hierarchies over enums
-- Place behavior inside domain objects
-- Avoid utility classes
-- Avoid ServiceImpl patterns
-- Keep code immutable by default
-- Use Result/sealed types for expected outcomes
-- Use exceptions for invariant violations
-- Follow feature-first structure
-- Keep side effects at boundaries
-
----
-
-# Summary
-
-Kotlin in StrataStax is used to:
-
-- Model the business domain precisely
-- Prevent invalid states by design
-- Combine FP clarity with OO expressiveness
-- Keep logic close to the data it belongs to
-- Ensure correctness through the type system
-
-The goal is not minimal code or maximal abstraction.
-
-The goal is **safe, expressive, and maintainable domain-driven software**.
+class MatchServiceImpl : MatchService
 ```
+
+Prefer:
+
+```kotlin
+class FinalizeMatch(
+    private val repository: MatchRepository
+)
+```
+
+Introduce an abstraction when it provides a meaningful boundary, such as:
+
+* domain/application boundary
+* infrastructure boundary
+* replaceable dependency
+* architectural contract
+* meaningful polymorphism
+
+Abstraction is a tool, not a goal.
+
+---
+
+# 4. Choosing Between OO and FP
+
+StrataStax does not prescribe "object-oriented" or "functional" Kotlin universally.
+
+Choose based on where the behavior belongs.
+
+## Behavior intrinsic to one concept
+
+Prefer a method:
+
+```kotlin
+match.finalize()
+```
+
+## Transformation of a concept
+
+A method or extension may be appropriate:
+
+```kotlin
+match.winner()
+```
+
+## Operation combining multiple concepts
+
+Prefer a function:
+
+```kotlin
+calculateStandings(matches)
+```
+
+## Application orchestration
+
+Use an application component:
+
+```kotlin
+finalizeMatch.execute(matchId)
+```
+
+## Infrastructure
+
+Use a dedicated infrastructure component:
+
+```kotlin
+matchRepository.find(matchId)
+```
+
+The resulting architecture should make the flow obvious:
+
+```text
+          Application
+               │
+               ▼
+       ┌────────────────┐
+       │ Domain objects │
+       └────────────────┘
+               │
+               ▼
+      Pure transformations
+               │
+               ▼
+      Infrastructure ports
+               │
+               ▼
+       Database / HTTP
+```
+
+---
+
+# 5. Modeling Domain Data
+
+A domain model should describe the domain rather than its persistence representation.
+
+For example:
+
+```kotlin
+data class Match(
+    val id: MatchId,
+    val game: GameRef,
+    val participants: List<MatchParticipant>,
+    val status: MatchStatus
+)
+```
+
+A database representation may look completely different:
+
+```kotlin
+data class MatchRow(
+    val id: Long,
+    val publicId: UUID,
+    val gameId: Long,
+    val status: String
+)
+```
+
+That is not duplication for its own sake.
+
+The two types represent different concepts:
+
+```text
+MatchRow
+    = persistence representation
+
+Match
+    = domain representation
+```
+
+Do not force persistence structures into the domain merely to reduce mapping code.
+
+---
+
+# 6. Rich Domain Modeling Without Overengineering
+
+"Rich domain model" does not mean every class needs behavior.
+
+This is perfectly valid:
+
+```kotlin
+data class GameRef(
+    val id: GameId,
+    val name: String
+)
+```
+
+There may simply be no meaningful behavior that belongs on `GameRef`.
+
+Likewise:
+
+```kotlin
+data class MatchParticipant(
+    val player: PlayerRef,
+    val score: Score?,
+    val outcome: Outcome?
+)
+```
+
+can remain primarily data.
+
+Rich modeling means:
+
+> **Put meaningful domain rules and behavior in the model when they belong there.**
+
+It does not mean:
+
+> **Add methods to every data class.**
+
+Avoid artificial richness such as:
+
+```kotlin
+fun getId(): MatchId = id
+fun getStatus(): MatchStatus = status
+fun isValid(): Boolean = true
+```
+
+That adds ceremony without adding domain meaning.
+
+---
+
+# 7. Null Safety
+
+Nullability is a domain modeling decision.
+
+## Optional value
+
+Use nullable:
+
+```kotlin
+val score: Score?
+```
+
+when absence is genuinely meaningful.
+
+## Mandatory value
+
+Use a non-null type:
+
+```kotlin
+val game: GameRef
+```
+
+when the domain requires it.
+
+## Multiple meaningful states
+
+Use a sealed type when `null` would hide important distinctions:
+
+```kotlin
+sealed interface ClaimState {
+    data object Unclaimed : ClaimState
+    data object PendingApproval : ClaimState
+    data class Claimed(val player: CanonicalPlayer) : ClaimState
+}
+```
+
+The goal is not "zero nulls".
+
+The goal is:
+
+> **Make the meaning of absence explicit.**
+
+---
+
+# 8. Error Handling
+
+StrataStax distinguishes three fundamentally different situations.
+
+## Invalid state
+
+Something violates an invariant.
+
+```kotlin
+require(status == MatchStatus.OPEN)
+```
+
+or:
+
+```kotlin
+throw InvalidMatchState(...)
+```
+
+## Expected business outcome
+
+Something is a normal possibility in the domain.
+
+```kotlin
+sealed interface ClaimResult {
+    data class Claimed(val player: Player) : ClaimResult
+    data object AlreadyClaimed : ClaimResult
+    data object ApprovalRequired : ClaimResult
+}
+```
+
+## Infrastructure failure
+
+Something external failed.
+
+```text
+database unavailable
+HTTP timeout
+serialization failure
+connection failure
+```
+
+These should normally be exceptions at the infrastructure boundary.
+
+The core principle is:
+
+> **Exceptions protect invariants and represent failures.
+> Domain result types represent meaningful business alternatives.**
+
+---
+
+# 9. Readability Over Cleverness
+
+Kotlin provides many powerful language features.
+
+Do not use them merely because they are available.
+
+Prefer:
+
+```kotlin
+val winner = participants.firstOrNull {
+    it.outcome == Outcome.Win
+}
+```
+
+over an unnecessarily clever abstraction.
+
+Prefer:
+
+```kotlin
+when (status) {
+    MatchStatus.OPEN -> ...
+    MatchStatus.FINALIZED -> ...
+}
+```
+
+over indirection when the `when` directly communicates the business rule.
+
+Prefer a small explicit class over a generic abstraction when the abstraction obscures the domain.
+
+Code should be **easy to read before it is impressive to write**.
+
+---
+
+# 10. Generated Code
+
+Generated code is infrastructure.
+
+Do not apply domain-style rules mechanically to generated code.
+
+For example, generated persistence code may legitimately contain:
+
+```kotlin
+data class MatchRecord(
+    val id: Long,
+    val status: String
+)
+```
+
+Generated code should optimize for:
+
+* correctness
+* predictable generation
+* interoperability
+* performance
+* stable contracts
+
+Hand-written domain code should optimize for:
+
+* domain clarity
+* invariants
+* behavior
+* type safety
+
+Do not distort the domain model merely to make generated code simpler.
+
+---
+
+# 11. A Practical Decision Guide
+
+When writing Kotlin, ask these questions in order:
+
+### 1. Is this a domain concept?
+
+If yes, model it explicitly.
+
+```kotlin
+MatchId
+GameId
+EmailAddress
+Match
+Player
+```
+
+### 2. Does this value have meaningful domain identity?
+
+Consider a value class.
+
+```kotlin
+@JvmInline
+value class MatchId(val value: UUID)
+```
+
+### 3. Does this concept have an invariant?
+
+Enforce it at construction.
+
+```kotlin
+require(value >= 0)
+```
+
+### 4. Does this behavior intrinsically belong to the concept?
+
+Use a method.
+
+```kotlin
+match.finalize()
+```
+
+### 5. Does this operation combine or transform multiple concepts?
+
+Consider a pure function.
+
+```kotlin
+calculateStandings(matches)
+```
+
+### 6. Are there meaningful alternative outcomes?
+
+Model them explicitly.
+
+```kotlin
+sealed interface ClaimResult
+```
+
+### 7. Is this merely an optional value?
+
+Use nullable.
+
+```kotlin
+Score?
+```
+
+### 8. Is this infrastructure?
+
+Keep it outside the domain.
+
+```kotlin
+MatchRepository
+BggClient
+QueryExecutor
+```
+
+### 9. Would an abstraction make the code clearer?
+
+If not, don't introduce it.
+
+### 10. Is the result simpler and clearer than the alternatives?
+
+If yes, stop.
+
+---
+
+# 12. Summary
+
+StrataStax Kotlin follows these principles:
+
+### MUST
+
+* Keep domain code independent from infrastructure.
+* Enforce domain invariants at domain boundaries.
+* Use meaningful domain types instead of ambiguous primitives.
+* Keep side effects outside pure domain logic.
+* Represent expected business outcomes explicitly.
+* Use exceptions for invariant violations and failures.
+* Do not use `!!`.
+
+### DEFAULT
+
+* Prefer immutable state.
+* Prefer `val`.
+* Prefer immutable collections in domain models.
+* Prefer data classes for immutable state.
+* Put intrinsic behavior on domain concepts.
+* Use pure functions for independent transformations.
+* Use enums for simple closed values.
+* Use sealed types for meaningful variants.
+* Use nullable values when absence is genuinely optional.
+* Keep application orchestration outside domain objects.
+* Prefer the clearest implementation over stylistic purity.
+* Avoid unnecessary utility classes and abstractions.
+
+### WHEN USEFUL
+
+* Value classes for meaningful domain primitives.
+* Extension functions for clear, focused APIs.
+* Sealed state machines for genuinely different states.
+* Pure functions for calculations and transformations.
+* Local mutation for algorithms where it improves clarity or performance.
+* Controlled mutable state inside infrastructure components.
+* Loops when they are clearer or more efficient than collection chains.
+* Factories when construction is non-trivial.
+* `Result` for generic success/failure.
+* Explicit types where they communicate intent.
+* Abstractions where they provide a meaningful architectural or polymorphic boundary.
+
+---
+
+## The ultimate rule
+
+> **Choose the simplest Kotlin construct that makes the domain explicit, the behavior obvious, and invalid states difficult to create.**
+
+Kotlin's type system, functional features, and object-oriented features are tools.
+
+**They are not the architecture.**

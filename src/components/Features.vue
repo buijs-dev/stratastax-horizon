@@ -110,8 +110,8 @@ defineProps({
 
 .feature-card:hover {
   transform: translateY(-0.25rem);
-  border-color: rgba(78, 124, 255, 0.3);
-  box-shadow: 0 10px 15px -3px rgba(78, 124, 255, 0.05);
+  border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
+  box-shadow: 0 10px 15px -3px color-mix(in srgb, var(--color-primary) 5%, transparent);
 }
 
 .feature-accent {

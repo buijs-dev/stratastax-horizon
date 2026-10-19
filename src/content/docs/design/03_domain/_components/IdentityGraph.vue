@@ -59,19 +59,19 @@
 }
 
 .canonical{
-  border-color:#4CAF50;
+  border-color:var(--stx-success, #0F766E);
 }
 
 .edge{
-  border-color:#2196F3;
+  border-color:var(--color-primary);
 }
 
 .ghost{
-  border-color:#FF9800;
+  border-color:var(--stx-accent, #F97360);
 }
 
 .match{
-  border-color:#9E9E9E;
+  border-color:var(--color-muted);
 }
 
 .arrow{

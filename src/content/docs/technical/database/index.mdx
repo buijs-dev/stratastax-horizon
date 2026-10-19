@@ -1,0 +1,23 @@
+---
+title: Database
+description: The database schemas of the Stratastax services, generated from their Flyway migrations.
+sidebar:
+    label: Overview
+    order: 0
+---
+
+Every service owns its own PostgreSQL database. The schemas are defined by Flyway migrations in
+[stratastax-contract](https://github.com/buijs-dev/stratastax-contract/tree/main/stratastax-schema), and the
+pages in this section are generated from them with [tbls](https://github.com/k1LoW/tbls): one page per table
+with its columns, constraints, indexes and ER diagram.
+
+| Database | Service |
+|----------|---------|
+| [engine](/technical/database/engine/) | stratastax-engine, the platform: users, players, games, groups, communities and matches |
+| [game-catalog](/technical/database/game-catalog/) | stratastax-game-catalog: the pipeline that brings games from BoardGameGeek into the engine |
+| [i18n](/technical/database/i18n/) | the i18n service and its CMS: applications, message keys, translations and releases |
+
+The docs are built from an empty, throwaway database with only the versioned migrations, so they show the
+structure and never any data. The comments on tables and columns come from the migrations themselves; they also
+name the invariants that the application, not the database, enforces. The naming rules are in
+[NAMING.md](https://github.com/buijs-dev/stratastax-contract/blob/main/stratastax-schema/NAMING.md).

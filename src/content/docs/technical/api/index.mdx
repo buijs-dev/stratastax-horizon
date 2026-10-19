@@ -1,0 +1,37 @@
+---
+title: API
+description: The REST APIs of Stratastax, generated from the OpenAPI specs in stratastax-contract.
+sidebar:
+    label: Overview
+    order: 0
+---
+
+The APIs of Stratastax are defined first, as OpenAPI 3.1 specs in
+[stratastax-contract](https://github.com/buijs-dev/stratastax-contract/tree/main/stratastax-openapi). The services
+generate their endpoints from these specs, and stratastax-flutter generates typed clients from them. This reference
+is rebuilt from the `main` branch of the contract on every change.
+
+| Spec | Implemented by | Bundled spec |
+|------|----------------|--------------|
+| Platform | stratastax-engine | [`stratastax.platform.api-v1.yaml`](/openapi/stratastax.platform.api-v1.yaml) |
+| Game catalog | stratastax-game-catalog | [`stratastax.catalog.api-v1.yaml`](/openapi/stratastax.catalog.api-v1.yaml) |
+| Translations | the i18n service and its CMS | [`stratastax.i18n.api-v1.yaml`](/openapi/stratastax.i18n.api-v1.yaml) |
+
+- The pages in this section describe every operation, its parameters, responses and security.
+- The [explorer](/technical/api/explorer/) shows the same specs in Swagger UI, where requests can be tried out.
+- The bundled specs above are single files without external references. Their URLs are stable, so tools can
+  read them directly: `https://docs.stratastax.dev/openapi/<file>`. The list of specs with their version and
+  SHA-256 is in [`/openapi/index.json`](/openapi/index.json).
+
+## Conventions
+
+- **Versioning**: within a file `api-vN` only backward compatible changes are made; a breaking change goes into a
+  new file `api-v(N+1)`. The `info.version` of a spec goes up with every change.
+- **Security**: every operation declares the role it needs, as `<service>:<feature>-<action>`, for example
+  `stx-i18n:bundle-read`.
+- **Errors**: problem details ([RFC 9457](https://www.rfc-editor.org/rfc/rfc9457)) for every error response.
+- **Concurrency and retries**: `ETag` with `If-Match` for updates, and `Idempotency-Key` for requests that create
+  something.
+
+The full guidelines are in the
+[README of stratastax-openapi](https://github.com/buijs-dev/stratastax-contract/blob/main/stratastax-openapi/README.md).

@@ -80,23 +80,23 @@
 .btn-primary {
   background: var(--gradient-brand);
   color: white;
-  box-shadow: 0 4px 14px 0 rgba(78, 124, 255, 0.39);
+  box-shadow: 0 4px 14px 0 color-mix(in srgb, var(--color-primary) 39%, transparent);
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(78, 124, 255, 0.45);
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--color-primary) 45%, transparent);
   filter: brightness(1.1);
 }
 
 .btn-outline {
   border: 2px solid var(--color-primary);
   color: var(--color-text);
-  background: rgba(78, 124, 255, 0.05);
+  background: color-mix(in srgb, var(--color-primary) 5%, transparent);
 }
 
 .btn-outline:hover {
-  background: rgba(78, 124, 255, 0.15);
+  background: color-mix(in srgb, var(--color-primary) 15%, transparent);
   border-color: var(--color-accent);
   color: white;
 }

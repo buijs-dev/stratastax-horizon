@@ -151,7 +151,7 @@ const initials = computed(() =>
   height: 48px;
   border-radius: 12px;
   background: var(--gradient-brand);
-  color: #ffffff;
+  color: var(--color-on-primary);
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 16px;
@@ -330,7 +330,7 @@ const initials = computed(() =>
 
 .faction-wr {
   background: var(--color-primary);
-  color: #ffffff;
+  color: var(--color-on-primary);
   font-size: 10px;
   font-weight: 700;
   padding: 2px 7px;
