@@ -1,0 +1,94 @@
+/* ─── Fonts ──────────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* ─── Site aliases ───────────────────────────────────────────────────── */
+/* The colours, fonts and the Starlight theme come from stratastax-design (src/styles/design, copied by
+   npm run sync, loaded before this file). These aliases keep the names the components use; the
+   fallbacks only apply to a build without the sync. */
+:root {
+  --color-bg: var(--stx-background, #F8F9FF);
+  --color-surface: var(--stx-surface, #FFFFFF);
+  --color-surface-high: var(--stx-subtle, #EEF0FB);
+  --color-primary: var(--stx-primary, #4F46E5);
+  --color-on-primary: var(--stx-on-primary, #FFFFFF);
+  --color-accent: var(--stx-highlight, #7C3AED);
+  --color-text: var(--stx-on-background, #20243A);
+  --color-muted: var(--stx-muted, #565C7E);
+  --color-border: var(--stx-border, #E0E3F2);
+
+  --font-display: var(--stx-font-heading, 'Plus Jakarta Sans', sans-serif);
+  --font-body: var(--stx-font-sans, Inter, sans-serif);
+
+  --radius-card: var(--stx-radius-lg, 12px);
+  --radius-pill: var(--stx-radius-full, 9999px);
+
+  --gradient-brand: var(--stx-gradient-brand, linear-gradient(135deg, #4F46E5, #8B5CF6));
+  --gradient-brand-h: linear-gradient(90deg, var(--color-primary), var(--stx-focus, #8B5CF6));
+}
+
+/* ─── Global base ────────────────────────────────────────────────────── */
+body {
+    font-family: var(--font-body);
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ─── Gradient text utility ──────────────────────────────────────────── */
+.text-gradient {
+    background: var(--gradient-brand);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* ─── Hero mesh gradient (signature element) ─────────────────────────── */
+.hero-mesh {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.hero-mesh::before,
+.hero-mesh::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    animation: drift 12s ease-in-out infinite alternate;
+}
+
+.hero-mesh::before {
+    width: 600px;
+    height: 600px;
+    top: -200px;
+    left: -100px;
+    background: radial-gradient(circle, color-mix(in srgb, var(--color-primary) 18%, transparent) 0%, transparent 70%);
+}
+
+.hero-mesh::after {
+    width: 500px;
+    height: 500px;
+    top: -100px;
+    right: -100px;
+    background: radial-gradient(circle, color-mix(in srgb, var(--color-accent) 15%, transparent) 0%, transparent 70%);
+    animation-delay: -6s;
+}
+
+@keyframes drift {
+    from { transform: translate(0, 0) scale(1); }
+    to   { transform: translate(40px, 30px) scale(1.08); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hero-mesh::before,
+    .hero-mesh::after { animation: none; }
+}
+
+/* ─── Starlight nav logo ─────────────────────────────────────────────── */
+.site-title {
+    font-family: var(--font-display) !important;
+    font-weight: 800 !important;
+}

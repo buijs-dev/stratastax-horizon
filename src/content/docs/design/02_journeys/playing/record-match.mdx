@@ -1,0 +1,96 @@
+---
+title: Record Match
+description: Establish a match record in your Personal Gaming Archive.
+sidebar:
+    label: Record Match
+    order: 1
+---
+
+import UserJourney from '../_components/UserJourney.vue'
+import DomainImpact from '../_components/DomainImpact.vue'
+
+## Goal
+Record a match and add it to your Personal Gaming Archive.
+
+## Why
+A match is more than a winner and a score.
+Recording a match creates connections between you, the game, and the people you played with —
+connections that persist even for players who have not yet joined Stratastax.
+Every match recorded now becomes part of a growing, permanent history.
+
+## Journey
+
+<UserJourney
+    client:load
+    steps={[
+        {
+            label: 'You identify the game that was played',
+            actor: 'You'
+        },
+        {
+            label: 'You identify the participants',
+            actor: 'You',
+            note: 'Players with a Canonical Player Identity are linked directly. Players without one are recorded by name — a Ghost Player is created to hold their participation until they join.'
+        },
+        {
+            label: 'You optionally link a Playset',
+            actor: 'You',
+            note: 'Reuse an existing Playset or create a new one to capture expansions, variants, and scenario for this match.'
+        },
+        {
+            label: 'You record the outcome for each participant',
+            actor: 'You',
+            note: 'Score, rank, faction, character, or win/loss — whatever applies to this game and this player.'
+        },
+        {
+            label: 'You add match details',
+            actor: 'You',
+            note: 'Date, location, duration, and any notes you want to preserve.'
+        },
+        {
+            label: 'You save the match',
+            actor: 'You'
+        },
+        {
+            label: 'The match is linked to the game and all participants',
+            actor: 'System',
+            note: 'Each participant\'s Personal Gaming Archive is updated. Statistics are recalculated.',
+            status: 'success'
+        }
+    ]}
+/>
+
+## Outcome
+A permanent match record exists, connected to the game, its Playset (if any), and all participants.
+Each participant's Personal Gaming Archive is updated with this match, including their individual
+result — score, rank, faction, or outcome.
+Players without an account are represented as Ghost Players and can claim their history when they join.
+
+---
+
+## Metadata
+
+| Field             | Value                                                                                                                                                                                                                                                                        |
+|-------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Capability        | Match Recording                                                                                                                                                                                                                                                              |
+| Primary actor     | User                                                                                                                                                                                                                                                                         |
+| Supporting actors | System                                                                                                                                                                                                                                                                       |
+| Related concepts  | [Rich Game Data](/design/01_introduction/concepts#rich-game-data), [Data Linking](/design/01_introduction/concepts#data-linking), [Personal Gaming Archive](/design/01_introduction/concepts#personal-gaming-archive), [Playsets](/design/01_introduction/concepts#playsets) |
+
+---
+
+## Conceptual impact
+
+<DomainImpact
+    client:load
+    groups={[
+        {
+            action: 'Creates',
+            entities: ['Match', 'Ghost Player']
+        },
+        {
+            action: 'Reads',
+            entities: ['Playset']
+        }
+    ]}
+/>

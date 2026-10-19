@@ -1,0 +1,204 @@
+---
+title: Domain Model Overview
+description: All aggregates, their relationships, recurring patterns, and open backlog items, in one place.
+sidebar:
+    label: Overview
+    order: 0
+---
+
+## Purpose
+
+This page ties together every domain model document into one map: which
+Aggregate Roots exist, what they own, how they reference each other, which
+design patterns repeat across the model, and what has been deliberately
+deferred. Read the individual documents for full detail — this page is the
+index and the cross-check.
+
+---
+
+## Aggregate Roots
+
+| Aggregate | Owns (child entities) | References (other aggregates) |
+|---|---|---|
+| **User** | UserIdentity, PrivacySetting | CanonicalPlayer (1:1) |
+| **CanonicalPlayer** | — | — |
+| **GhostPlayer** | — | User (owner) |
+| **ClaimRequest** | — | CanonicalPlayer, GhostPlayer(s), User (validator) |
+| **Match** | MatchParticipant (→ Loadout) | Game, Playset (0..1), Community (0..1), User (owner) |
+| **Game** | Expansion | — |
+| **Playset** | — | Game, Expansion(s), User (owner) |
+| **MatchEdit** | — | Match, User (proposer, approver) |
+| **TrustedEditor** | *(child of User)* | User (trustee) |
+| **Group** | — | User (owner, members) |
+| **Community** | Membership | User (owner), Group (AdminGroup, 0..1) |
+| **MembershipRequest** | — | Community, User (proposer, decider) |
+
+Two entities are referenced throughout but do not yet have their own
+document — see **Gaps to close** below.
+
+---
+
+## Relationship map
+
+```
+User ──1:1── CanonicalPlayer
+  │
+  ├──1:N── UserIdentity
+  ├──1:N── PrivacySetting ──0:N── Group  (only Groups owned by the same User)
+  ├──1:N── GhostPlayer (owned, reusable across that owner's Matches)
+  └──1:N── Group (owned)
+
+CanonicalPlayer ◄──ClaimEdge── GhostPlayer ◄──targets── ClaimRequest ──originatesFrom──► CanonicalPlayer
+
+Match ──1:N──► MatchParticipant ──1:1──► GhostPlayer
+  │                  └──0:1──► Loadout
+  ├──0:1──► Playset ──1:1──► Game
+  │                    └──0:N──► Expansion (must belong to the same Game)
+  ├──1:1──► Game
+  ├──0:1──► Community
+  └──◄──targets── MatchEdit ──proposedBy/approvedBy──► User
+
+Community ──1:N──► Membership ──1:1──► User
+  ├──0:1──► Group (AdminGroup, must be owned by Community's current owner)
+  └──◄──targets── MembershipRequest ──proposedBy/decidedBy──► User
+```
+
+---
+
+## Recurring patterns
+
+Naming these explicitly because they repeat on purpose — recognizing the
+pattern matters more than memorizing each instance.
+
+### 1. The Request/Edit pattern (proposal, requires approval, produces a result)
+
+**ClaimRequest**, **MatchEdit**, and **MembershipRequest** all follow the
+same shape:
+
+```
+[Proposer] → [Request Aggregate] → requires approval from [Approver] → produces [Result]
+```
+
+| | Proposer | Approver | Result |
+|---|---|---|---|
+| ClaimRequest | CanonicalPlayer's User | GhostPlayer's owner (or trusted invitation) | ClaimEdge |
+| MatchEdit | Match owner, or a participant (if enabled) | Match owner (or TrustedEditor) | Updated MatchParticipant/Loadout/Playset reference |
+| MembershipRequest | Any User | Community owner or admin | Membership |
+
+Each is its own Aggregate Root specifically so approval can be coordinated
+without giving the request write access to the aggregate it targets. None
+of them mutates anything directly; each produces a result that a separate
+command applies.
+
+### 2. Fixed vs. transferable ownership
+
+Every owned aggregate has exactly one owner, but ownership is fixed for
+some and transferable for others:
+
+- **Fixed, never transferred**: Match, GhostPlayer, Playset, Group. These
+represent either historical fact (Match, GhostPlayer's participation
+history) or a personal, individually-curated roster (Group) — nothing
+about them makes sense with a different owner.
+- **Transferable**: Community. A Community is an ongoing, living thing
+whose leadership can legitimately change; transferring it clears its
+AdminGroup, since an AdminGroup must always be owned by the current
+owner.
+
+### 3. Child entity vs. own Aggregate Root
+
+The deciding question, asked consistently: **can this thing be referenced
+by more than one instance of its "natural" parent?**
+
+- If no (it only ever makes sense inside one parent): child entity.
+MatchParticipant and Loadout (inside Match), Expansion (inside Game),
+Membership (inside Community), UserIdentity and PrivacySetting (inside
+User).
+- If yes (it must be shareable/reusable across parents): own Aggregate
+Root, referenced by ID. Playset is the clearest example — it must be
+reusable across many Matches, which is exactly why it was pulled out of
+Match after initially being modeled as a child entity (see
+**Playset**).
+
+### 4. Reference data vs. process aggregates — domain events
+
+Not every aggregate publishes domain events. The test applied throughout:
+**does anything actually need to react to this happening?**
+
+- **No events**: Game, Expansion (reference/catalogue data — nothing
+reacts to a Game existing), Group's creation/renaming (same reasoning).
+- **Events**: anything that changes who can do what, or who can see what
+(PrivacyLevelChanged, GroupMemberAdded/Removed, MembershipAdded/Removed,
+ClaimEdgeCreated/Removed), or that represents a real business decision
+(MatchRecorded, ClaimRequestApproved, MembershipRequestApproved).
+
+### 5. Non-escalation through reuse, not new rules
+
+Community's AdminGroup deliberately reuses Group exactly as it already
+existed for personal rosters. Because only a Group's owner can change its
+membership, "an admin cannot promote another admin" falls out for free —
+it was never written as a Community-specific rule.
+
+---
+
+## Gaps to close
+
+Two entities are referenced across multiple documents but have no
+dedicated model of their own yet:
+
+- **ClaimEdge** — the approved result of a ClaimRequest, referenced in
+Player, ClaimRequest, and the Identity Graph document. Its shape
+(CanonicalPlayer ↔ GhostPlayer, revocable, auditable) is described
+informally wherever it's mentioned, but never formalized with its own
+invariants, lifecycle, and aggregate placement the way ClaimRequest was.
+- **Dispute Flag** — currently described inline within **MatchParticipant**
+rather than as its own document. This is probably fine as-is, given how
+small it is, but is listed here for visibility.
+
+Neither blocks an MVP build — both are informally specified enough to
+implement — but formalizing ClaimEdge properly (most likely as a small
+child entity or value object, referenced by both CanonicalPlayer and
+GhostPlayer) is worth doing before it's needed by more than these three
+documents.
+
+---
+
+## Deliberately out of scope (backlog)
+
+Each of these was considered and explicitly deferred, not overlooked:
+
+- **PlayerMerged** — merging two CanonicalPlayers that turned out to be the
+same real person (e.g. accidental double registration). Structurally
+different from ClaimRequest (Canonical ↔ Canonical, not Canonical ↔
+Ghost); needs its own design.
+- **Tournament** — a time-bound Community with a registration window.
+Removed entirely; if revisited, it should build on Community and
+MembershipRequest rather than reintroduce a parallel membership
+mechanism.
+- **Statistic Snapshot** and active sharing (shareable links,
+notifications) — a scoped, point-in-time statistic computed from a
+player's history, shareable independently of the full archive.
+- **Dispute resolution/escalation** — today, a rejected MatchEdit or a
+Dispute Flag has no further process. Revisit only if this proves to be
+an actual problem in practice.
+- **`InviteOnly` JoinPolicy** for Community — would need its own
+Invitation concept; `Open` and `RequiresApproval` are sufficient for the
+MVP.
+- **Import / Export / API Integration** — Data Portability journeys exist
+conceptually, but have no technical domain model yet.
+- Sourcing Game/Expansion data from BGG (or anywhere else) is
+infrastructure, intentionally outside this model entirely.
+
+---
+
+## MVP coverage check
+
+Everything needed for the MVP scope agreed earlier is now modeled:
+
+- ✅ User registration (User, UserIdentity, CanonicalPlayer)
+- ✅ Recording a Match (Match, MatchParticipant, Loadout, Playset, Game,
+Expansion)
+- ✅ Editing a Match (MatchEdit, TrustedEditor, Dispute Flag)
+- ✅ Claiming a GhostPlayer (ClaimRequest, ClaimEdge — informally specified,
+see **Gaps to close**)
+- ✅ Granting access to your data (PrivacySetting, Group)
+- ✅ Creating and joining a Community (Community, MembershipRequest)

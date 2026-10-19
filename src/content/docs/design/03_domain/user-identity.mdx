@@ -1,0 +1,107 @@
+---
+title: UserIdentity
+description: A federated identity link for a User, provided by Keycloak (or a provider it brokers).
+sidebar:
+    label: UserIdentity
+    order: 7
+---
+
+## Purpose
+
+A UserIdentity represents one federated identity link a User can
+authenticate with. Stratastax never stores a password itself — Keycloak
+owns authentication entirely, and may itself broker other providers
+(Google, Meta, ...) behind a single Keycloak realm. A single User can hold
+multiple UserIdentities at once, allowing the same CanonicalPlayer to be
+reached through whichever provider the person used to sign in.
+
+This replaces the earlier "Credential" model, which assumed Stratastax
+would store password hashes locally. It does not — Keycloak is the sole
+identity provider, and a UserIdentity only ever records the link between a
+Stratastax User and a `(provider, provider_user_id)` pair from a verified
+JWT.
+
+---
+
+## Responsibilities
+
+A UserIdentity is responsible for:
+
+- proving control over one federated identity, via a verified JWT;
+- mapping one `(provider, provider_user_id)` pair to exactly one User.
+
+---
+
+## Not Responsible For
+
+A UserIdentity is NOT responsible for:
+
+- storing or verifying passwords — that is entirely Keycloak's
+responsibility, never Stratastax's;
+- session management or authorization scopes;
+- profile data or preferences;
+- identity resolution — a UserIdentity never links to a GhostPlayer or
+participates in claims; it only ever links to a User.
+
+---
+
+## Invariants
+
+- A UserIdentity belongs to exactly one User.
+- The `(provider, provider_user_id)` pair a UserIdentity represents is
+unique across all UserIdentities platform-wide.
+- A User cannot remove their last remaining UserIdentity — at least one
+must always exist, or the User would have no way to authenticate.
+
+---
+
+## Provider
+
+`provider` is a free-form value, not a fixed enum — typically `keycloak`
+for direct Keycloak authentication, or the name of a provider Keycloak
+itself brokers (e.g. `google`, `meta`) when Keycloak surfaces the
+upstream provider rather than its own realm as the identity source.
+`provider_user_id` is always the JWT `sub` claim as issued for that
+provider.
+
+---
+
+## Lifecycle
+
+### Creation
+
+A UserIdentity is created via **UserProvisioningService**, the first time a
+User authenticates with a given `(provider, provider_user_id)` pair —
+either provisioning a new User (if none exists yet for that pair) or
+attaching the identity to an existing one.
+
+### Evolution
+
+A UserIdentity can be removed, provided it is not the User's last
+remaining one.
+
+### End State
+
+A UserIdentity is deleted when removed by its User. Removing a
+UserIdentity never affects the User's CanonicalPlayer, GhostPlayers, or
+gaming history.
+
+---
+
+## Relationships
+
+- UserIdentity belongs to User.
+
+---
+
+## Domain Events
+
+- UserIdentityAdded
+- UserIdentityRemoved
+
+---
+
+## Aggregate Design
+
+UserIdentity is a child entity within the **User** aggregate. It has no
+identity or lifecycle independent of its User.

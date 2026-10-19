@@ -1,0 +1,105 @@
+---
+title: User
+description: The authenticated actor responsible for login, credentials, and ownership of a Canonical Player.
+sidebar:
+    label: User
+    order: 6
+---
+
+## Purpose
+
+A User represents an authenticated actor within Stratastax. A User is
+created together with a CanonicalPlayer during registration, in a fixed 1:1
+relationship, and can authenticate through any number of UserIdentities —
+federated identity links provided by Keycloak, which may itself broker
+other providers (Google, Meta, ...) behind a single realm. Stratastax
+never stores a password itself; that is entirely Keycloak's responsibility.
+
+A User is also the owner of any GhostPlayers it creates while recording
+matches (see **Player**).
+
+---
+
+## Responsibilities
+
+A User is responsible for:
+
+- authentication, via one or more UserIdentities;
+- owning exactly one CanonicalPlayer;
+- owning the GhostPlayers it creates as a recorder;
+- holding zero or more PrivacySettings, one per DataType (see
+**PrivacySetting**).
+
+---
+
+## Not Responsible For
+
+A User is NOT responsible for:
+
+- gaming history itself — that belongs to CanonicalPlayer and GhostPlayer;
+- statistics or achievements — those are anchored to CanonicalPlayer;
+- identity resolution logic — that belongs to ClaimRequest and the Identity
+Resolution domain service.
+
+---
+
+## Invariants
+
+- A User has exactly one CanonicalPlayer, created at the same time as the
+User.
+- A User has one or more UserIdentities; a User cannot be left with zero
+UserIdentities (see **UserIdentity**).
+- A given `(provider, provider_user_id)` pair can be linked to at most one
+User.
+- A User owns any number of GhostPlayers, each created while recording a
+match.
+- A User has at most one PrivacySetting per DataType (see
+**PrivacySetting**).
+
+---
+
+## Lifecycle
+
+### Creation
+
+A User and its CanonicalPlayer are created together, during registration,
+with an initial UserIdentity, via UserProvisioningService.
+
+### Evolution
+
+- UserIdentities can be added or removed over the User's lifetime.
+- GhostPlayers accumulate as the User records matches.
+
+### End State
+
+A User is never deleted while referenced by gaming history (directly, or
+through its CanonicalPlayer or owned GhostPlayers).
+
+---
+
+## Relationships
+
+- User has many UserIdentities;
+- User owns exactly one CanonicalPlayer;
+- User owns any number of GhostPlayers;
+- User has zero or more PrivacySettings.
+
+---
+
+## Domain Events
+
+- UserCreated
+- UserIdentityAdded
+- UserIdentityRemoved
+- PrivacyLevelChanged
+
+---
+
+## Aggregate Design
+
+User is an Aggregate Root. UserIdentity and PrivacySetting are each child
+entities within the User aggregate. The platform-wide uniqueness of an external identity (at most one
+User per Google account, per Meta account, etc.) is enforced as a global
+constraint, not as an in-aggregate invariant — this is a cross-aggregate rule
+comparable to a unique index, not something a single User instance can
+verify on its own.

@@ -1,0 +1,155 @@
+---
+title: Community
+description: A named group of people with shared history, owned by one User who may delegate admin rights via a Group.
+sidebar:
+    label: Community
+    order: 15
+---
+
+## Purpose
+
+A Community gives a set of Users a shared identity and shared match
+history — a family, a regular playgroup, a club. It is owned by exactly one
+User, who may delegate admin rights to others by referencing one of their
+own Groups as the Community's **AdminGroup**. This reuses Group entirely
+as-is (see **Group**) — Community does not require any change to how Group
+works, and inherits its non-escalation property for free: only the
+Community's owner can change who is in the AdminGroup, because only a
+Group's owner can change its members.
+
+---
+
+## Responsibilities
+
+A Community is responsible for:
+
+- having a Name and Description;
+- being owned by exactly one User, with ownership that can be transferred;
+- optionally referencing an AdminGroup — a Group owned by the Community's
+current owner — whose members hold admin rights over the Community;
+- defining its JoinPolicy (`Open` or `RequiresApproval`);
+- holding Memberships, one per member User;
+- being the target of MembershipRequests when its JoinPolicy is
+`RequiresApproval`.
+
+---
+
+## Not Responsible For
+
+A Community is NOT responsible for:
+
+- managing its AdminGroup's member list — that belongs entirely to Group;
+the Community only stores which Group, if any, is designated as its
+AdminGroup;
+- a member's Privacy Levels — joining a Community never changes what a
+member's own PrivacySettings expose; a Community can only ever show what
+a member has independently chosen to share;
+- computing shared statistics or leaderboards — those are read from Match
+and Membership data by something else, not owned by Community itself.
+
+---
+
+## Rights Model
+
+- **Owner**: full rights. Only the owner may transfer ownership, set/change/
+clear the AdminGroup, change the JoinPolicy, delete the Community, and
+remove a member who currently holds admin rights — in addition to
+everything an admin can do.
+- **Admin** (owner, or any member of the AdminGroup, if set): may approve or
+reject MembershipRequests, edit the Community's Name and Description, and
+remove a non-admin member.
+- **Member**: no administrative rights; participates in the Community's
+shared history according to their own PrivacySettings; may leave the
+Community voluntarily at any time.
+
+---
+
+## Invariants
+
+- A Community has exactly one owner at any time. Unlike Match, GhostPlayer,
+Playset, and Group, Community ownership **can** be transferred — a
+Community is an ongoing, living thing whose leadership can legitimately
+change hands, unlike a historical record or a personal roster.
+- If an AdminGroup is set, it must be owned by the Community's current
+owner.
+- Transferring ownership clears the AdminGroup. The new owner must
+explicitly designate their own Group as the new AdminGroup — an old
+AdminGroup, owned by the previous owner, is never carried over.
+- A User has at most one Membership per Community.
+- Only the owner may change the AdminGroup itself; admins cannot grant
+admin rights to anyone, including themselves.
+- The owner cannot leave the Community or be removed from it — they must
+transfer ownership first (see **Rights Model** for who may then leave).
+- Removing a member who currently holds admin rights (a member of the
+AdminGroup) requires the same authority as changing the AdminGroup
+itself — only the owner. Any admin may remove a non-admin member.
+- If a member who holds admin rights leaves voluntarily or is removed,
+they are also removed from the AdminGroup as an automatic consequence —
+a Community never holds an admin who is no longer a member. This is not
+an exception to Group's "only the owner changes membership" rule: the
+Community's owner and the AdminGroup's owner are always the same User,
+so this is that owner's own Group being updated as a side effect of
+their own Community, not a third party acting on it.
+
+---
+
+## Lifecycle
+
+### Created
+
+A Community is created by its (first) owner, with a Name, Description, and
+JoinPolicy, and optionally an AdminGroup.
+
+### Evolution
+
+- The owner may transfer ownership (clearing the AdminGroup, per the
+invariant above), set or change the AdminGroup, or change the
+JoinPolicy.
+- The owner or an admin may edit the Name and Description.
+- Memberships accumulate as MembershipRequests are approved (or
+immediately, if the JoinPolicy is `Open`).
+- A member may leave voluntarily at any time, except the owner. An owner
+or admin may remove another member, subject to the admin-removal rule
+above.
+
+### End State
+
+A Community is deleted by its owner. Its Memberships end with it. Matches
+already recorded that reference the Community remain valid historical
+records regardless.
+
+---
+
+## Relationships
+
+- Community is owned by exactly one User;
+- Community optionally references an AdminGroup (a Group owned by the same
+User as the Community's current owner);
+- Community holds Memberships (0..N), one per member User;
+- Community is targeted by MembershipRequests;
+- Community is optionally referenced by Match.
+
+---
+
+## Domain Events
+
+- CommunityOwnershipTransferred
+- AdminGroupChanged
+- MembershipAdded
+- MembershipRemoved
+- CommunityDeleted
+
+Creation and Name/Description edits are not modeled as events, for the same
+reason as Game and Group: nothing needs to react to them. Ownership,
+admin rights, and membership changes are included because they directly
+affect who can do what, and who can see what.
+
+---
+
+## Aggregate Design
+
+Community is its own Aggregate Root. Membership is a child entity within
+it — enforcing "at most one Membership per User" is a Community-scoped
+rule, the same reasoning as MatchParticipant within Match. AdminGroup is
+not owned by Community; it is a reference to a Group owned elsewhere,
+exactly like Match's reference to Playset.

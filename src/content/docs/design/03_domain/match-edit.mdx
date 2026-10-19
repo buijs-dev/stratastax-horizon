@@ -1,0 +1,169 @@
+---
+title: MatchEdit
+description: A proposed change to a recorded match, approved solely by the match's owner.
+sidebar:
+    label: MatchEdit
+    order: 8
+---
+
+## Purpose
+
+A MatchEdit represents a proposed change to an already-recorded Match — a
+correction to a MatchParticipant's result or Loadout, or a change to
+which Playset a Match references.
+It exists because matches are entered by hand and mistakes happen.
+
+The Match's owner (its original recorder) is the sole approver of any
+MatchEdit. Other participants are never asked to approve — they are
+notified instead, and retain their own way to flag a result they disagree
+with (see **Dispute Flag**, on MatchParticipant).
+
+A MatchEdit never mutates a Match directly. Like a ClaimRequest, it is a
+proposal that must be approved before it takes effect, and its history
+remains auditable even when rejected.
+
+---
+
+## Responsibilities
+
+A MatchEdit is responsible for:
+
+- proposing one or more changes to a Match's MatchParticipants or
+Loadouts, or a change to which Playset the Match references;
+- being approved or rejected solely by the Match's owner;
+- respecting auto-approval where the owner has granted the proposer a
+TrustedEditor relationship;
+- notifying every CanonicalPlayer with a claimed MatchParticipant in the Match
+once the edit is applied;
+- preserving the original values for audit, whether approved or rejected.
+
+---
+
+## Not Responsible For
+
+A MatchEdit is NOT responsible for:
+
+- identity resolution or claiming — that belongs to ClaimRequest;
+- resolving disagreement between participants — a participant's recourse is
+a Dispute Flag on their own MatchParticipant, not a veto over the edit;
+- editing a Match that is Locked (see **Locking**) — this is refused
+outright, regardless of who proposes or approves it;
+- editing a Match where edit requests have been disabled by its owner (see
+**Edit Requests Toggle**) — in that case, only the owner may create a
+MatchEdit at all.
+
+---
+
+## Who may propose, who approves
+
+- **The Match's owner** may propose a MatchEdit at any time (subject to
+Locking) and approves their own proposals implicitly by creating them.
+- **A participant** — any User whose CanonicalPlayer has a claimed
+MatchParticipant in the Match — may propose a MatchEdit only if the Match's
+owner has enabled edit requests for that Match. Such a proposal requires
+the owner's approval before it takes effect, unless the owner has granted
+that participant's User a TrustedEditor relationship, in which case it is
+auto-approved.
+- No one other than the owner is ever required to approve a MatchEdit.
+
+---
+
+## Notification
+
+Once a MatchEdit is applied, every CanonicalPlayer with a claimed
+MatchParticipant in the Match is notified of what changed. Notification is
+informational only — it does not block or delay the edit, and it carries no
+approval power.
+
+---
+
+## Edit Requests Toggle
+
+Each Match's owner configures, per Match, whether other participants may
+propose MatchEdits at all:
+
+- **Enabled** (default): participants may propose edits, subject to the
+owner's approval or an existing TrustedEditor grant.
+- **Disabled**: only the owner may create MatchEdits for that Match.
+
+---
+
+## Locking
+
+A Match becomes Locked, and can no longer be the target of any MatchEdit,
+once its configured edit window has elapsed.
+
+Locking is permanent, and applies regardless of the Edit Requests Toggle or
+any TrustedEditor grant.
+
+---
+
+## Invariants
+
+- A MatchEdit targets exactly one Match.
+- A MatchEdit is immutable once created; its lifecycle proceeds only
+through approval events.
+- A MatchEdit cannot target a Locked Match.
+- A MatchEdit proposed by a participant (not the owner) requires the
+owner's approval, unless the owner has granted that participant's User a
+TrustedEditor relationship.
+- A MatchEdit proposed by a participant is refused outright if the Match's
+Edit Requests Toggle is Disabled.
+- Rejecting a MatchEdit never alters the Match; the original values stand.
+- Applying a MatchEdit never deletes prior values — the previous state
+remains visible in the Match's history.
+
+---
+
+## Lifecycle
+
+### Proposed
+
+Created by the Match's owner, or by a participant if edit requests are
+enabled for that Match.
+
+### Approved / Applied
+
+The owner approves (explicitly, implicitly by being the proposer, or via an
+existing TrustedEditor grant). The targeted MatchParticipants, Loadouts, and/or
+and/or which Playset it references are updated; prior values remain part
+of the audit trail. Affected
+CanonicalPlayers are notified.
+
+### Rejected
+
+The owner declines. The Match is unchanged. No further process exists
+today — a new MatchEdit may be proposed again later.
+
+---
+
+## Relationships
+
+```
+MatchEdit
+├── targets         → Match (specific MatchParticipants / Loadouts, or
+│                     which Playset it references)
+├── proposedBy       → User
+├── approvedBy       → Match owner (User)
+├── autoApprovedVia  → TrustedEditor (where applicable)
+├── notifies         → CanonicalPlayer(s) with a claimed MatchParticipant
+```
+
+---
+
+## Domain Events
+
+- MatchEditProposed
+- MatchEditApproved
+- MatchEditApplied
+- MatchEditRejected
+- MatchLocked
+
+---
+
+## Aggregate Design
+
+MatchEdit is its own Aggregate Root, mirroring ClaimRequest: it coordinates
+a single approval decision without owning the Match itself. Applying an
+approved MatchEdit is a command against the Match aggregate, not something
+MatchEdit performs directly.

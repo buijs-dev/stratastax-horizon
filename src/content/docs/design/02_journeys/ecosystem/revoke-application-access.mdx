@@ -1,0 +1,79 @@
+---
+title: Revoke Application Access
+description: Withdraw a third-party application's access to your data at any time.
+sidebar:
+    label: Revoke Access
+    order: 19
+---
+
+import UserJourney from '../_components/UserJourney.vue'
+import DomainImpact from '../_components/DomainImpact.vue'
+
+## Goal
+Withdraw a third-party application's access to your data, at any time and
+without needing the application's cooperation.
+
+## Why
+Ownership means you decide who has access, for as long as you choose. An
+application only holds the access you granted it — that access is never
+permanent, and taking it back should be as simple as granting it was.
+
+## Journey
+
+<UserJourney
+    client:load
+    steps={[
+        {
+            label: 'You open the list of applications you have authorised',
+            actor: 'You'
+        },
+        {
+            label: 'You select an application to revoke',
+            actor: 'You'
+        },
+        {
+            label: 'You confirm the revocation',
+            actor: 'You'
+        },
+        {
+            label: 'The application\'s access is withdrawn immediately',
+            actor: 'System',
+            note: 'Data the application already wrote remains part of your Personal Gaming Archive. The application can no longer read or write on your behalf.',
+            status: 'success'
+        }
+    ]}
+/>
+
+## Outcome
+- The application no longer has access to your data.
+- Data previously written by the application remains in your Personal Gaming Archive.
+- You can re-authorise the application again in the future, if you choose to.
+
+---
+
+## Metadata
+
+| Field             | Value                                                                                                                                             |
+|-------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------|
+| Capability        | Platform & Integrations                                                                                                                            |
+| Primary actor     | User                                                                                                                                                |
+| Supporting actors | System                                                                                                                                              |
+| Related concepts  | [Data Ownership & Privacy](/design/01_introduction/concepts#data-ownership--privacy), [Open Ecosystem](/design/01_introduction/concepts#open-ecosystem) |
+
+---
+
+## Conceptual impact
+
+<DomainImpact
+    client:load
+    groups={[
+        {
+            action: 'Deletes',
+            entities: ['Authorization']
+        },
+        {
+            action: 'Reads',
+            entities: ['Application']
+        }
+    ]}
+/>

@@ -1,0 +1,260 @@
+---
+title: Developing
+description: The foundational principles that govern all engineering decisions within StrataStax.
+sidebar:
+    label: Overview
+    order: 0
+---
+
+> These principles are the non-negotiable foundation of the system.
+
+They define *how we think* before we decide *how we implement*.
+
+All other guidelines refine or expand these principles. None override them.
+
+---
+
+# 1. Correctness First
+
+Correctness is the highest priority in all software design.
+
+A system that is fast, elegant, or flexible but incorrect is not useful.
+
+## Implications
+
+- Business rules must always be enforced explicitly
+- Edge cases must be handled deliberately
+- Invalid states should be unrepresentable where possible
+- Silent failures are unacceptable in core flows
+
+## Rule
+
+> If correctness conflicts with performance, flexibility, or simplicity, correctness wins.
+
+---
+
+# 2. Simplicity First
+
+Simplicity is the primary mechanism for controlling complexity.
+
+Simple systems are:
+
+- easier to understand
+- easier to debug
+- easier to extend
+- easier to test
+
+## Implications
+
+- Prefer straightforward solutions over clever ones
+- Avoid unnecessary abstractions
+- Avoid speculative design
+- Do not introduce patterns without a real need
+
+## Rule
+
+> If two solutions are correct, choose the simplest one.
+
+---
+
+# 3. Explicitness Over Implicit Behaviour
+
+Software should clearly express its intent.
+
+Hidden behavior increases cognitive load and leads to unexpected side effects.
+
+## Implications
+
+- Avoid “magic” framework behavior where possible
+- Prefer explicit calls over convention-based execution
+- Make dependencies visible
+- Make side effects obvious
+
+## Rule
+
+> If behavior is not visible in the code, it is a liability.
+
+---
+
+# 4. Boundaries Are Sacred
+
+Clear boundaries between architectural layers are essential.
+
+Without boundaries, systems degrade into tightly coupled, unmaintainable structures.
+
+## Implications
+
+- Domain must not depend on infrastructure
+- Infrastructure must not leak into domain
+- Each layer has a single responsibility
+- Communication happens through well-defined contracts
+
+## Rule
+
+> Dependencies always point inward.
+
+---
+
+# 5. Immutability by Default
+
+State is a major source of complexity and bugs.
+
+Immutability reduces unpredictability and improves reasoning.
+
+## Implications
+
+- Prefer immutable data structures
+- Avoid shared mutable state
+- Treat mutation as an exception, not a norm
+- Design with transformation over modification
+
+## Rule
+
+> If a value does not need to change, it must not change.
+
+---
+
+# 6. Functional First Thinking
+
+Systems should be designed as compositions of transformations.
+
+This improves testability and clarity.
+
+## Implications
+
+- Prefer pure functions where possible
+- Isolate side effects at system boundaries
+- Compose behavior from small units
+- Minimize stateful logic
+
+## Rule
+
+> Side effects belong at the edges, not in the core.
+
+---
+
+# 7. Features Over Technical Layers
+
+The structure of the system should reflect business capabilities, not technical concerns.
+
+## Implications
+
+- Organize code by feature, not by type
+- Each feature owns its full stack (domain, application, infrastructure, presentation)
+- Avoid global “service/controller/repository” buckets
+- Improve cohesion within features
+
+## Rule
+
+> Code is grouped by why it exists, not what it is.
+
+---
+
+# 8. Architecture Over Frameworks
+
+Frameworks are tools, not foundations.
+
+The architecture defines the system. Frameworks implement it.
+
+## Implications
+
+- Business logic must not depend on frameworks
+- Frameworks are confined to adapters
+- Replaceability is a design goal
+- Framework usage should be minimal and deliberate
+
+## Rule
+
+> Frameworks serve the architecture, not the other way around.
+
+---
+
+# 9. Test for Confidence, Not Coverage
+
+Tests are a tool to reduce uncertainty, not to maximize coverage metrics.
+
+## Implications
+
+- Test behavior, not implementation details
+- Prefer integration tests for real confidence
+- Use unit tests for complex logic only
+- Avoid over-mocking
+- Avoid testing trivial code
+
+## Rule
+
+> We test what we cannot afford to break.
+
+---
+
+# 10. Optimize Based on Evidence
+
+Performance is important, but must be grounded in reality.
+
+## Implications
+
+- Do not optimize prematurely
+- Measure before optimizing
+- Prefer clarity over micro-optimizations
+- Focus optimization on real bottlenecks
+
+## Rule
+
+> If it is not measured, it is not a problem yet.
+
+---
+
+# 11. Consistency Over Preference
+
+A system must feel predictable.
+
+Inconsistent patterns increase cognitive load more than suboptimal patterns.
+
+## Implications
+
+- Follow established conventions
+- Prefer consistency over personal style
+- Avoid introducing new patterns without justification
+- Standardize approaches across features
+
+## Rule
+
+> A consistent system is easier to understand than a perfect one.
+
+---
+
+# 12. Pragmatism Over Ideology
+
+No principle is absolute in isolation except correctness and simplicity.
+
+## Implications
+
+- Use FP, SOLID, Clean Code as tools—not doctrines
+- Break rules when justified by clarity or necessity
+- Avoid over-engineering in the name of purity
+- Evaluate trade-offs explicitly
+
+## Rule
+
+> Principles guide decisions; they do not replace thinking.
+
+---
+
+# Summary
+
+These principles define how we build software:
+
+- Correct
+- Simple
+- Explicit
+- Well-bounded
+- Immutable where possible
+- Functional where practical
+- Feature-oriented
+- Framework-independent
+- Tested for confidence
+- Performance-aware but not premature
+- Consistent
+- Pragmatic
+
+Everything else is an implementation detail.

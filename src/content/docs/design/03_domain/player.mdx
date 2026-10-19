@@ -1,0 +1,209 @@
+---
+title: Player
+description: The core identity model for a Stratastax player, including canonical identities and ghost observations.
+sidebar:
+    label: Player
+    order: 1
+---
+
+## Purpose
+
+"Player" is a conceptual grouping for the two ways a real-world person is
+represented within Stratastax: as a **CanonicalPlayer** (a persistent,
+authoritative identity) or as a **GhostPlayer** (a personal, reusable
+reference kept by whoever recorded a match). Player is not itself a
+persisted aggregate — see **Aggregate Design** below.
+
+---
+
+## Identity Model
+
+### CanonicalPlayer
+
+Represents the authoritative identity of a real person within Stratastax.
+It is the stable identity used for:
+
+- ownership of gaming history;
+- statistics and achievements aggregation;
+- Community participation across time.
+
+A CanonicalPlayer is created together with a User during registration
+(see **User**), in a fixed 1:1 relationship.
+
+A CanonicalPlayer may be linked to multiple GhostPlayers, via ClaimEdges.
+
+---
+
+### GhostPlayer
+
+A GhostPlayer is not a snapshot of a player. It is a **personal reference**,
+owned by the User who created it (the recorder) — comparable to an entry in
+that recorder's own address book. It exists to hold participation until the
+real person joins Stratastax and it is claimed.
+
+Key properties:
+
+- owned by exactly one User (the recorder);
+- reusable across any number of matches recorded by that owner;
+- its display name is mutable by its owner (correcting a typo does not
+change historical results);
+- not globally unique — two different recorders can each have their own
+GhostPlayer referring to the same or different real people, entirely
+independently of one another;
+- may remain unclaimed indefinitely — claiming is never required.
+
+---
+
+### Identity Relationship
+
+GhostPlayers and CanonicalPlayers are connected through **claims**, not
+transformation. A CanonicalPlayer does not replace a GhostPlayer. Instead,
+it can be linked to one or more GhostPlayers:
+
+```
+CanonicalPlayer
+    └── claims (via ClaimEdge) ──► GhostPlayer(s)
+```
+
+This relationship is:
+
+- reversible;
+- auditable;
+- non-destructive to historical data.
+
+---
+
+## Responsibilities
+
+CanonicalPlayer is responsible for:
+
+- providing a stable identity for statistics, ratings, and achievements;
+- participating in Communities over time;
+- accumulating linked GhostPlayers via ClaimEdges.
+
+GhostPlayer is responsible for:
+
+- providing a stable, per-recorder reference usable across matches;
+- allowing its display name to be corrected by its owner;
+- serving as the anchor a Participation points to.
+
+---
+
+## Not Responsible For
+
+Neither CanonicalPlayer nor GhostPlayer is responsible for:
+
+- authentication;
+- login credentials;
+- notifications;
+- preferences;
+- privacy configuration.
+
+These responsibilities belong to **User**.
+
+Neither is responsible for:
+
+- holding match-specific results (score, rank, outcome) — that belongs to
+**Participation**;
+- holding per-match, per-player configuration (faction, character, cards) —
+that belongs to **Loadout**.
+
+---
+
+## Invariants
+
+- A Match never references a CanonicalPlayer directly. It always references
+a GhostPlayer, through a Participation.
+- A GhostPlayer is owned by exactly one User for its entire lifetime.
+- A GhostPlayer's identity (its owner, its creation context) is immutable;
+its display name is not.
+- Participation results do not change except through an approved MatchEdit,
+regardless of any later change to the GhostPlayer's display name.
+- A GhostPlayer can be referenced by any number of Participations belonging
+to its owner.
+- A GhostPlayer may remain unclaimed indefinitely.
+- A GhostPlayer can be referenced by multiple ClaimRequests (conflicting
+claims are allowed; only one ClaimEdge can be active at a time).
+- A CanonicalPlayer can claim multiple GhostPlayers.
+- Identity resolution never alters Match or Participation history.
+
+---
+
+## Lifecycle
+
+### Creation
+
+- GhostPlayer is created the first time its owner records a match with a
+participant who does not yet have a linkable CanonicalPlayer.
+- CanonicalPlayer is created during account registration, together with a
+User.
+
+### Evolution
+
+- GhostPlayers persist and are reused across matches by the same owner;
+their display name may be edited.
+- CanonicalPlayers accumulate linked GhostPlayers over time, through
+ClaimEdges created and resolved by Identity Resolution (see
+**ClaimRequest**).
+
+### End State
+
+Neither a CanonicalPlayer nor a GhostPlayer is ever deleted while referenced
+by gaming history.
+
+---
+
+## Relationships
+
+- GhostPlayer is referenced by Participation;
+- GhostPlayer is owned by User;
+- CanonicalPlayer is claimed to GhostPlayer via ClaimEdge;
+- CanonicalPlayer is targeted by ClaimRequests;
+- CanonicalPlayer is linked to Statistics, Statistic Snapshots, and
+Achievements;
+- CanonicalPlayer participates in Communities;
+- CanonicalPlayer is connected to exactly one User.
+
+---
+
+## Domain Events
+
+- GhostPlayerCreated
+- GhostPlayerRenamed
+- CanonicalPlayerCreated
+- ClaimRequestCreated
+- ClaimRequestApproved
+- ClaimRequestRejected
+- ClaimEdgeCreated
+- ClaimEdgeRemoved
+
+---
+
+## Aggregate Design
+
+**CanonicalPlayer** and **GhostPlayer** are each their own Aggregate Root.
+"Player" itself is a sealed conceptual supertype at the language level
+(e.g. `sealed interface Player`), not a separately persisted aggregate — it
+has no consistency rules of its own beyond what its two members enforce
+independently.
+
+### Reasoning
+
+CanonicalPlayer and GhostPlayer have different lifecycles, different
+creation triggers, and different invariants (mutable display name vs.
+persistent statistics anchor). Treating them as one aggregate would force
+unrelated consistency boundaries together. Each enforces its own rules:
+
+- GhostPlayer: ownership, reusability, display name mutability.
+- CanonicalPlayer: claim relationships, historical integrity as seen from
+the claiming side.
+
+---
+
+## Key Insight
+
+Player identity is not a single object. It is two independent aggregates —
+a persistent CanonicalPlayer and any number of personal, recorder-owned
+GhostPlayers — connected through reversible ClaimEdges. A Match never needs
+to know which of the two it is dealing with; it always points to a
+GhostPlayer, through a Participation.

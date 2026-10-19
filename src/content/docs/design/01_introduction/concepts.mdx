@@ -1,0 +1,303 @@
+---
+title: Concepts
+description: What makes Stratastax unique?
+sidebar:
+    label: Concepts
+    order: 2
+---
+
+Stratastax is built around a set of foundational principles that define how
+tabletop gaming data is represented, connected, and shared.
+Together these principles distinguish Stratastax from traditional score trackers
+by treating tabletop gaming as a connected identity network rather than a collection of isolated matches.
+
+---
+
+## Canonical Player Identity
+A Canonical Player Identity is the persistent representation of a player within the Stratastax network.
+It provides a stable identity that gaming history, statistics, achievements, and player relationships
+can be associated with over time, regardless of where or with whom the player participates.
+It answers the question: How do we know that all these gaming records belong to the same player?
+
+#### Example:
+- Emma records a board game session and adds Alain as a Ghost Player because he does not yet have a Stratastax account.
+- Two weeks later, Alain registers with Stratastax. A Canonical Player Identity is created for him,
+and the previously recorded Ghost Player can be linked to that identity.
+- From that point on, both past and future gaming history are associated with Alain's Canonical Player Identity.
+
+---
+
+## Identity Resolution
+Stratastax believes gaming history should not depend on when someone creates an account.
+Stratastax continuously improves identity quality by allowing player identities to be linked,
+merged, verified, and claimed over time.
+
+Stratastax is guided by the fundamental principle: There should ultimately be one identity representing one real player.
+This Canonical Player Identity is the authoritative representation of a real player.
+Identity resolution continuously moves the graph toward that single, canonical identity.
+
+### Ghost Players
+Stratastax uses Ghost Players as a mechanism to enable identity resolution. Users can record matches immediately
+by creating temporary player identities without requiring a Stratastax account.
+
+#### Example:
+A user records:
+- Peter
+- Sarah
+- Mark
+
+Mark and Sarah have a Stratastax account, so the recorded match is linked to their identities.
+Peter does not have a Stratastax account, so for him a Ghost Player is created.
+Later Peter registers an account on Stratastax and claims the existing player identity, recovering all historical gaming data.
+
+Stratastax enables gradual adoption without losing information.
+Identity resolution transforms unlinked records into a coherent gaming history, retroactively.
+
+### Claim Requests
+Linking a Ghost Player to a Canonical Player Identity is not automatic.
+Stratastax requires confirmation from the person who originally recorded the match,
+so that gaming history cannot be claimed by someone it does not belong to.
+
+A Claim Request represents this pending link, from the moment it is proposed
+until it is confirmed. Once confirmed, the Ghost Player's history becomes
+part of the claiming player's Personal Gaming Archive.
+
+#### Example:
+- Alain registers with Stratastax and finds a Ghost Player matching his name in Emma's match history.
+- Alain submits a Claim Request for that Ghost Player.
+- Emma, who recorded the original match, confirms the request.
+- The match becomes part of Alain's Personal Gaming Archive, alongside his other gaming history.
+
+---
+
+## Data Linking
+
+Stratastax ensures every piece of information is a connection point.
+It connects players to matches, matches to games, games to playsets, expansions, and publishers.
+
+Stratastax is not a collection of isolated records; it is a graph.
+Stratastax increases the value of that graph with every new connection made between players, matches, and identities.
+
+---
+
+## Rich Game Data
+A tabletop game is more than a winner and a score.
+Stratastax preserves the complete context of every gaming experience, including expansions, setup configurations, characters,
+factions, cards, scenarios, variants, and custom rules. This functions as a long-term archive, detailed enough to reconstruct
+a session years later and meaningful enough to reveal the patterns behind it.
+Depending on the game, Stratastax can also preserve strategic decisions and game-specific state,
+enabling much richer analysis than final scores alone.
+
+### Playsets
+Two matches of the same game are not necessarily played under the same conditions.
+A Playset captures a shared configuration: which expansions were used, which
+variants or custom rules were active, and which scenario or map was played.
+It is the context that applies equally to every participant in a match.
+
+A Playset is not tied to a single match. The same Playset can be linked to many
+matches that share the same configuration, so a group that always plays with the
+same expansion and house rules only has to define it once, and can reuse it
+every time they play again.
+
+What each player did within that context — their faction, their score, their
+outcome — is recorded separately, as part of their individual participation
+in the match.
+
+#### Example:
+- Emma and Alain regularly play Scythe with the "Invaders from Afar" expansion,
+on the automated variant. They save this once as a Playset called "Our Scythe Setup".
+- Every time they play Scythe together under the same conditions, they reuse
+"Our Scythe Setup" instead of configuring it again.
+- Emma plays as Crimean Khanate, Alain as Nordic Kingdom in one of those matches —
+these are recorded separately, as each player's individual result.
+
+---
+
+## Match Media
+A match is a social event, not just a result. Photos capture what data alone
+cannot: the table setup, the players, the moment someone won. Attached to a
+match record, they become part of a player's Personal Gaming Archive —
+searchable, tied to a specific game and group, and governed by the same
+Privacy Levels as any other match data.
+
+A photo is more than decoration. It is part of the record itself, and can in
+time become a source of data — a photo of a scoresheet or a game's final
+state could be scanned to help extract results automatically, turning a
+memory into structured history.
+
+#### Example:
+- After a game night, Emma uploads photos of the group playing Wingspan,
+including a shot of the final scoreboard.
+- The photos are attached to the match record, visible to participants
+according to their configured Privacy Levels.
+- Years later, viewing that match also shows the photos — the people,
+the table, the moment it happened.
+
+---
+
+## Personal Gaming Archive
+Stratastax is designed to preserve a player's gaming history and turn it into meaningful insight over a lifetime.
+It transforms raw session data into win percentages, faction statistics, historical rivalries, and strategic patterns
+that only become visible across hundreds of matches. Over time, this becomes a player's Personal Gaming Archive
+or better yet, a Digital Trophy Cabinet – a living
+record of their tabletop history to explore, analyze, and celebrate.
+
+### Statistic Snapshots
+The Personal Gaming Archive continuously computes statistics across a player's
+entire history. Sometimes a player wants something narrower: their win rate
+with one faction, their record in a single Playset, their history against one
+opponent, or their results within one Group.
+
+A Statistic Snapshot captures this: a specific scope — a game, a Playset, a
+date range, an opponent, or a Group — computed into a fixed result at the
+moment it is generated. Unlike the archive itself, a Snapshot does not
+continue to change as new matches are recorded. It represents a single,
+point-in-time picture, which makes it something a player can trust to share:
+what someone sees today is exactly what was shared, not a live view that
+might shift tomorrow.
+
+A Statistic Snapshot is treated like any other data type: it carries its own
+Privacy Level, independent of the match records it was computed from.
+Setting a Privacy Level makes a Snapshot visible to an audience, but
+visibility alone does not guarantee attention. Stratastax also lets a player
+actively share a Snapshot — drawing someone's notice to it directly, for
+example through a shareable link or a notification. Sharing complements
+Privacy Levels: it directs attention, but does not bypass them. The audience
+must still have the access their Privacy Level allows.
+
+#### Example:
+- Emma wants to share her performance in Scythe with her gaming club, without
+exposing her full archive.
+- She creates a Statistic Snapshot scoped to the game Scythe: win rate,
+favourite faction, and total matches played.
+- She sets this Snapshot's Privacy Level to Privileged Access for the
+"Board Game Club" Group.
+- The club can see Emma's Scythe performance. Her other games, and the
+underlying match records, remain private.
+
+---
+
+## Data Ownership & Privacy
+Stratastax is built on the principle that users own their gaming data. Stratastax holds data on your behalf,
+but it does not own it. Each resource carries its own configurable Privacy Level, allowing different types of data to have different audiences.
+
+### Privacy Levels
+Stratastax allows every user to control visibility at three levels:
+
+- **Private**: Stratastax restricts access to your data to you alone.
+- **Privileged Access**: Stratastax enables data sharing selectively with specific people: family members, friends, gaming groups, or tournament organizers.
+- **Public**: Stratastax allows selected data to be made publicly visible, such as a player profile or tournament history.
+
+Each piece of data carries its own Privacy Level. Setting a default applies
+a starting point across your data, but every data type can be configured
+independently, as described below.
+
+### Groups
+Privileged Access is granted through Groups: named collections of people
+you define, such as your family, a regular playgroup, or a tournament committee.
+A Group has no meaning on its own — its only purpose is to determine who
+gets Privileged Access to the data types you choose to share with it.
+
+You can belong to multiple Groups, and a Group's access can be configured
+per data type, just like your default Privacy Level.
+
+#### Example:
+- Emma creates a Group called "Board Game Club" and adds five regular playmates.
+- She grants this Group access to her match history and statistics, but not to her player profile.
+- Members of "Board Game Club" can now see Emma's match history; everyone else cannot.
+
+### Fine-Grained Controls
+Stratastax applies Privacy Levels per data type, not per account.
+It allows users to compose their own privacy model from individual choices across Groups and data types.
+
+Example:
+
+> - Family group → full access to match history and statistics
+> - Friends group → full access to match history and statistics
+> - Public → player profile only; match details remain private
+
+Stratastax ensures a player can have a discoverable public identity without exposing the details behind it.
+
+### Anonymous Aggregation
+Stratastax supports anonymous aggregation so that private data can contribute to collective knowledge.
+It ensures individual records remain private while surfacing statistical patterns at the community level.
+
+Example:
+
+> "Terraforming Mars has an average win rate of 52% for Corporation X."
+
+Stratastax ensures no individual player identity is exposed in these aggregations.
+Collective intelligence and personal privacy are not in conflict — they are designed to coexist.
+
+---
+
+## Communities
+A Group determines who has access to your data. A Community builds on top of
+a Group: it gives that collection of people a shared identity, a shared
+history, and shared statistics — the context in which players play, compare,
+and grow together.
+
+Every Community has a Group at its core, but adds:
+
+- **A shared match history** — the matches its members have played together.
+- **Community statistics and leaderboards** — computed only from what
+members have already made visible to the Community's Group.
+- **An identity of its own** — a name, a description, a story that outlives
+any single match.
+
+How someone becomes a member depends on the kind of Community. Some are
+curated by an existing member, the way a Group is today — a family or a
+regular playgroup, for example. Others require approval from an
+administrator, such as a club or a tournament organizer. Others are open,
+and anyone can join freely, such as a community built around a shared
+interest rather than shared people.
+
+Joining a Community never changes a member's Privacy Levels. It only makes
+membership possible — what a Community can show about its members is always
+limited to what each member has individually chosen to share with it.
+
+#### Example:
+- Emma's local board game café runs a Community called "Board Game Café Utrecht".
+- Members join by request, approved by the café's organizers.
+- Emma has shared her match history with the Community's Group, so her
+matches contribute to the Community's shared history and leaderboard.
+- Alain, a member who keeps his match history private, is still a member —
+he simply does not appear in the Community's statistics until he chooses
+to share them.
+
+### Membership Requests
+Joining a Community that requires approval is not immediate. A Membership
+Request represents this pending step, from the moment someone asks to join
+until an administrator confirms or declines it. For Communities that do not
+require approval, membership is confirmed directly, without this step.
+
+#### Example:
+- Alain finds "Board Game Café Utrecht" and requests to join.
+- His Membership Request is visible to the Community's administrators.
+- An administrator confirms the request, and Alain becomes a member.
+
+---
+
+## Network Effects
+Stratastax becomes more useful as the community grows. Every recorded match adds knowledge,
+every linked identity improves accuracy, and every new connection enriches the graph.
+It ensures that a player's archive is enriched by the people they play with, making growth both quantitative and qualitative.
+
+---
+
+## Open Ecosystem
+Stratastax is designed to integrate rather than replace. It prioritizes compatibility over isolation: clubs can manage events,
+tournament organizers can track competitive history, and players can bring their history with them or export it whenever they choose.
+
+Stratastax enables developers, clubs, and third-party applications to participate in the same identity network through open standards and APIs.
+
+### Developer Platform
+Stratastax is designed as a platform, not just an application. It provides access to data through:
+
+- Documented REST API
+- OpenAPI specification
+- SDKs
+- Import/export tools
+- Integrations
+
+Stratastax allows users and developers to build on top of the ecosystem.
