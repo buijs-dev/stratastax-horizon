@@ -1,0 +1,30 @@
+name: Pages
+
+# Builds docs.stratastax.dev and deploys it to GitHub Pages: on every push to main, and when
+# stratastax-contract or stratastax-design changes (they send contract-updated and design-updated).
+on:
+  push:
+    branches: [ main ]
+  repository_dispatch:
+    types: [ contract-updated, design-updated ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  pages:
+    uses: buijs-dev/ci-templates/.github/workflows/astro-pages.yml@main
+    with:
+      sources: |
+        buijs-dev/stratastax-contract@main:_sources/stratastax-contract
+        buijs-dev/stratastax-design@main:_sources/stratastax-design
+      java-root: _sources/stratastax-contract
+      prebuild: npm run sync
