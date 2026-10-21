@@ -1,9 +1,10 @@
 ---
-import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import Base from '../layouts/Base.astro';
 import Hero from '../components/Hero.vue';
 import StatsBar from '../components/StatsBar.vue';
 import Features from '../components/Features.vue';
 import CTA from '../components/CTA.vue';
+import { site } from '../site.mjs';
 
 const features = [
     {
@@ -35,16 +36,12 @@ const stats = [
 ];
 ---
 
-<StarlightPage
-        frontmatter={{
-            title: 'Stratastax — Board Game Night, Tracked',
-            description: 'Track every game night with connected player profiles, session logs, and cross-game insights. Never lose a score again.',
-            template: 'splash',
-            // splash template removes the sidebar, giving us full-width canvas
-        }}
+<Base
+    title="Stratastax — Board Game Night, Tracked"
+    description="Track every game night with connected player profiles, session logs, and cross-game insights. Never lose a score again."
 >
-    <Hero/>
+    <Hero appUrl={site.appUrl} appLive={site.appLive} docsUrl={site.docsUrl} />
     <StatsBar stats={stats}/>
     <Features features={features}/>
-    <CTA/>
-</StarlightPage>
+    <CTA docsUrl={site.docsUrl}/>
+</Base>

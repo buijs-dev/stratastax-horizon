@@ -2,8 +2,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
 
 /* ─── Site aliases ───────────────────────────────────────────────────── */
-/* The colours, fonts and the Starlight theme come from stratastax-design (src/styles/design, copied by
-   npm run sync, loaded before this file). These aliases keep the names the components use; the
+/* The colours and fonts come from stratastax-design (src/styles/design/tokens.css, copied by
+   npm run sync). These aliases keep the names the components use; the
    fallbacks only apply to a build without the sync. */
 :root {
   --color-bg: var(--stx-background, #F8F9FF);
@@ -27,7 +27,17 @@
 }
 
 /* ─── Global base ────────────────────────────────────────────────────── */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+html {
+    color-scheme: light dark;
+}
+
 body {
+    margin: 0;
+    line-height: 1.6;
     font-family: var(--font-body);
     background-color: var(--color-bg);
     color: var(--color-text);
@@ -87,8 +97,3 @@ body {
     .hero-mesh::after { animation: none; }
 }
 
-/* ─── Starlight nav logo ─────────────────────────────────────────────── */
-.site-title {
-    font-family: var(--font-display) !important;
-    font-weight: 800 !important;
-}

@@ -6,7 +6,7 @@
           Want to be the first to know when we launch?
         </h2>
         <p class="cta-description">
-          Stratastax is currently in heavy development. Explore our design docs to see where we're headed, reach out with feedback, or suggest new features.
+          Stratastax is currently in heavy development. Explore <a :href="docsUrl">the documentation</a> to see where we're headed, reach out with feedback, or suggest new features.
         </p>
         <div class="cta-actions">
           <a href="mailto:buijsdev@gmail.com" class="btn btn-primary">
@@ -21,7 +21,18 @@
   </section>
 </template>
 
+<script setup>
+defineProps({
+  docsUrl: { type: String, required: true },
+});
+</script>
+
 <style scoped>
+.cta-description a {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
 .cta-section {
   padding: 0 1rem 6rem;
 }

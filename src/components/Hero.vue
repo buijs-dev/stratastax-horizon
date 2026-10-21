@@ -18,16 +18,27 @@
       </p>
 
       <div class="hero-actions">
-        <a href="/design" class="btn btn-primary">
-          View Docs
+        <a v-if="appLive" :href="appUrl" class="btn btn-primary">
+          Open the app
         </a>
-        <a href="https://github.com/buijs-dev/stratastax-horizon" class="btn btn-outline">
-          GitHub ↗
+        <span v-else class="btn btn-primary btn-soon" aria-disabled="true">
+          App coming soon
+        </span>
+        <a :href="docsUrl" class="btn btn-outline">
+          Documentation
         </a>
       </div>
     </div>
   </section>
 </template>
+
+<script setup>
+defineProps({
+  appUrl: { type: String, required: true },
+  appLive: { type: Boolean, default: false },
+  docsUrl: { type: String, required: true },
+});
+</script>
 
 <style scoped>
 .hero {
@@ -123,6 +134,16 @@
   filter: brightness(1.1);
 }
 
+.btn-soon {
+  cursor: default;
+  opacity: 0.75;
+}
+
+.btn-soon:hover {
+  transform: none;
+  filter: none;
+}
+
 .btn-outline {
   border: 2px solid var(--color-primary);
   color: var(--color-text);
@@ -132,7 +153,7 @@
 .btn-outline:hover {
   background: color-mix(in srgb, var(--color-primary) 15%, transparent);
   border-color: var(--color-accent);
-  color: white;
+  color: var(--color-text);
 }
 
 .text-gradient {
